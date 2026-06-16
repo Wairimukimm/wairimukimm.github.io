@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DemandIQ — Forecasting Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c14;--s1:#0d1220;--s2:#111827;--s3:#1a2235;--s4:#1f2a3d;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --blue:#3b82f6;--blue2:#60a5fa;--teal:#14b8a6;--purple:#8b5cf6;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--cyan:#06b6d4;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --font:'Space Grotesk',sans-serif;--mono:'Space Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.logo-name{font-size:16px;font-weight:700;color:var(--blue2);letter-spacing:-0.3px;}
+.logo-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.model-status{margin:10px 12px;background:var(--s3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;}
+.model-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);margin-bottom:4px;}
+.model-name{font-size:11px;font-weight:600;color:var(--text);}
+.model-acc{font-size:10px;color:var(--green);margin-top:2px;font-family:var(--mono);}
+.nav{flex:1;padding:8px 0;overflow-y:auto;}
+.nav-sec{padding:12px 14px 4px;font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;color:var(--muted);font-size:12px;transition:all 0.15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--s2);}
+.nav-item.active{color:var(--blue2);background:rgba(59,130,246,0.08);border-left-color:var(--blue2);}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.retrain-btn{margin:10px 12px;padding:8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:8px;color:var(--blue2);font-size:11px;font-family:var(--font);cursor:pointer;width:calc(100% - 24px);transition:all 0.15s;font-weight:500;}
+.retrain-btn:hover{background:rgba(59,130,246,0.25);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.page{display:none;padding:22px 26px;}.page.active{display:block;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-0.4px;}
+.page-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.btn{padding:6px 14px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;transition:all 0.15s;}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{background:var(--blue2);}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border2);}.btn-ghost:hover{background:var(--s3);}
+.sel{background:var(--s2);border:1px solid var(--border2);border-radius:7px;padding:5px 10px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.stat-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px;}
+.stat-val{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.stat-chg{font-size:11px;margin-top:4px;}
+.up{color:var(--green);}.dn{color:var(--red);}
+.stat-bar{position:absolute;bottom:0;left:0;right:0;height:2px;}
+
+/* PANELS */
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.panel-title{font-size:13px;font-weight:600;}
+.panel-body{padding:16px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{padding:8px 12px;text-align:left;font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;font-weight:400;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.num{font-family:var(--mono);text-align:right;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:var(--mono);}
+.b-green{background:rgba(16,185,129,0.12);color:var(--green);}
+.b-red{background:rgba(239,68,68,0.12);color:var(--red);}
+.b-amber{background:rgba(245,158,11,0.12);color:var(--amber);}
+.b-blue{background:rgba(59,130,246,0.12);color:var(--blue2);}
+.b-purple{background:rgba(139,92,246,0.12);color:var(--purple);}
+.b-gray{background:var(--s3);color:var(--muted);}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+/* FORECAST CHART */
+.forecast-chart{position:relative;height:180px;display:flex;align-items:flex-end;gap:3px;padding:0 2px;}
+.fc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;}
+.fc-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;position:relative;transition:opacity 0.2s;}
+.fc-bar:hover{opacity:0.85;}
+.fc-bar.actual{background:linear-gradient(to top,#3b82f6,#60a5fa);}
+.fc-bar.forecast{background:linear-gradient(to top,rgba(59,130,246,0.3),rgba(96,165,250,0.5));border:1px dashed rgba(96,165,250,0.4);border-bottom:none;}
+.fc-bar.highlight{background:linear-gradient(to top,#14b8a6,#5eead4);}
+.fc-label{font-size:8px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.fc-divider{position:absolute;top:0;bottom:24px;width:1px;background:rgba(255,255,255,0.15);border-left:1px dashed rgba(255,255,255,0.2);}
+.fc-legend{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted);}
+.fc-legend-item{display:flex;align-items:center;gap:6px;}
+.legend-box{width:12px;height:8px;border-radius:2px;}
+
+/* ACCURACY GAUGE */
+.gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.gauge-card{background:var(--s2);border-radius:8px;padding:14px;text-align:center;}
+.gauge-val{font-size:28px;font-weight:700;font-family:var(--mono);}
+.gauge-lbl{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;}
+.gauge-sub{font-size:10px;margin-top:3px;}
+
+/* SKU SELECTOR */
+.sku-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:16px;}
+.sku-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all 0.15s;}
+.sku-card:hover{border-color:var(--border2);}
+.sku-card.active{border-color:var(--blue);background:rgba(59,130,246,0.06);}
+.sku-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.sku-cat{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:6px;}
+.sku-acc{font-size:11px;color:var(--green);}
+
+/* MINI SPARKLINE */
+.sparkline{display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:6px;}
+.spark-bar{flex:1;border-radius:1px;min-height:2px;}
+
+/* PROGRESS BAR */
+.prog-track{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+
+/* RECOMMENDATION */
+.rec-card{background:var(--s2);border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:3px solid;}
+.rec-card.order{border-left-color:var(--blue);}
+.rec-card.reduce{border-left-color:var(--amber);}
+.rec-card.urgent{border-left-color:var(--red);}
+.rec-title{font-size:12px;font-weight:600;margin-bottom:3px;}
+.rec-sub{font-size:11px;color:var(--muted);line-height:1.5;}
+.rec-action{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;font-family:var(--mono);}
+.rec-action.order{background:rgba(59,130,246,0.15);color:var(--blue2);}
+.rec-action.reduce{background:rgba(245,158,11,0.15);color:var(--amber);}
+.rec-action.urgent{background:rgba(239,68,68,0.15);color:var(--red);}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.muted{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">DemandIQ</div>
+    <div class="logo-sub">ML Forecasting Engine</div>
+  </div>
+  <div class="model-status">
+    <div class="model-label">Active Model</div>
+    <div class="model-name">LSTM + XGBoost Ensemble</div>
+    <div class="model-acc">MAPE: 8.6% · AUC: 0.914</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Forecasting</div>
+    <div class="nav-item active" onclick="showPage('overview')" data-page="overview"><span class="nav-dot"></span>Forecast Overview</div>
+    <div class="nav-item" onclick="showPage('sku')" data-page="sku"><span class="nav-dot"></span>SKU Drilldown</div>
+    <div class="nav-item" onclick="showPage('recommendations')" data-page="recommendations"><span class="nav-dot"></span>PO Recommendations</div>
+    <div class="nav-sec">Model</div>
+    <div class="nav-item" onclick="showPage('accuracy')" data-page="accuracy"><span class="nav-dot"></span>Model Accuracy</div>
+    <div class="nav-item" onclick="showPage('pipeline')" data-page="pipeline"><span class="nav-dot"></span>ML Pipeline</div>
+  </nav>
+  <button class="retrain-btn" onclick="animateRetrain()">↺ Trigger Retraining</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div><div class="page-title">Forecast Overview</div><div class="page-sub">14 stores · 847 SKUs · Week 4 & 8 ahead predictions</div></div>
+    <div class="hdr-right">
+      <select class="sel" id="horizon-sel" onchange="renderOverview()"><option value="4">4-Week Horizon</option><option value="8">8-Week Horizon</option></select>
+      <select class="sel" id="store-sel" onchange="renderOverview()"><option value="all">All Stores</option><option value="nbi">Nairobi CBD</option><option value="wes">Westlands</option><option value="ksu">Karen/Suburb</option><option value="mom">Mombasa</option><option value="kla">Kampala</option></select>
+      <button class="btn btn-ghost">Export</button>
+    </div>
+  </div>
+  <div class="stats" id="overview-stats"></div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">Demand Forecast — Top Categories (Units)</div><div class="fc-legend"><div class="fc-legend-item"><div class="legend-box" style="background:#3b82f6;"></div>Historical</div><div class="fc-legend-item"><div class="legend-box" style="background:rgba(96,165,250,0.4);border:1px dashed rgba(96,165,250,0.6);"></div>Forecast</div><div class="fc-legend-item"><div class="legend-box" style="background:#14b8a6;"></div>This Week</div></div></div>
+    <div class="panel-body">
+      <div id="cat-selector" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;"></div>
+      <div class="forecast-chart" id="main-chart"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">SKU Forecast Summary — Top 15 by Volume</div><span class="badge b-blue">847 total SKUs</span></div>
+    <table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Store</th><th class="num">Actual (4W)</th><th class="num">Forecast (4W)</th><th class="num">Variance</th><th>MAPE</th><th>Action</th></tr></thead><tbody id="sku-table"></tbody></table>
+  </div>
+</div>
+
+<!-- SKU DRILLDOWN -->
+<div class="page" id="page-sku">
+  <div class="page-header">
+    <div><div class="page-title">SKU Drilldown</div><div class="page-sub">Individual product forecast analysis</div></div>
+    <div class="hdr-right">
+      <select class="sel" id="sku-cat-filter" onchange="renderSKUPage()"><option value="">All Categories</option><option value="Dairy">Dairy</option><option value="Beverages">Beverages</option><option value="Grains">Grains</option><option value="Personal Care">Personal Care</option><option value="Snacks">Snacks</option></select>
+    </div>
+  </div>
+  <div class="sku-grid" id="sku-cards"></div>
+  <div class="panel" id="sku-detail-panel" style="display:none;">
+    <div class="panel-hdr"><div class="panel-title" id="sku-detail-title">SKU Detail</div><span class="badge b-green">Live forecast</span></div>
+    <div class="panel-body" id="sku-detail-body"></div>
+  </div>
+</div>
+
+<!-- PO RECOMMENDATIONS -->
+<div class="page" id="page-recommendations">
+  <div class="page-header">
+    <div><div class="page-title">Purchase Order Recommendations</div><div class="page-sub">AI-generated based on forecast + current stock levels</div></div>
+    <div class="hdr-right"><button class="btn btn-blue">Export POs</button></div>
+  </div>
+  <div class="stats" style="grid-template-columns:repeat(3,1fr);" id="po-stats"></div>
+  <div class="grid2">
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--red);">🚨 Urgent — Stockout Risk</div>
+      <div id="urgent-recs"></div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--blue2);">📦 Standard Reorders</div>
+      <div id="order-recs"></div>
+    </div>
+  </div>
+  <div style="margin-top:14px;">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--amber);">⚠️ Reduce Orders — Overstock Risk</div>
+    <div id="reduce-recs"></div>
+  </div>
+</div>
+
+<!-- ACCURACY -->
+<div class="page" id="page-accuracy">
+  <div class="page-header">
+    <div><div class="page-title">Model Accuracy</div><div class="page-sub">Held-out test set evaluation · Last retrained Sunday 05:00 EAT</div></div>
+    <button class="btn btn-ghost">Full Report</button>
+  </div>
+  <div class="gauge-row" style="margin-bottom:16px;">
+    <div class="gauge-card"><div class="gauge-val" style="color:var(--green);">8.6%</div><div class="gauge-lbl">MAPE</div><div class="gauge-sub" style="color:var(--green);">vs 34% baseline</div></div>
+    <div class="gauge-card"><div class="gauge-val" style="color:var(--blue2);">0.914</div><div class="gauge-lbl">AUC Score</div><div class="gauge-sub" style="color:var(--blue2);">vs 0.71 baseline</div></div>
+    <div class="gauge-card"><div class="gauge-val" style="color:var(--amber);">91.4%</div><div class="gauge-lbl">Within 10% Error</div><div class="gauge-sub" style="color:var(--muted);">SKU/store/week</div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">MAPE by Category</div></div>
+      <div class="panel-body" id="mape-chart"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Model vs Baseline</div></div>
+      <div class="panel-body" id="baseline-chart"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">Weekly Accuracy Trend — Past 12 Weeks</div></div>
+    <div class="panel-body">
+      <div class="forecast-chart" id="acc-trend-chart"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">Feature Importance — Top Drivers</div></div>
+    <div class="panel-body" id="feature-importance"></div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="page" id="page-pipeline">
+  <div class="page-header">
+    <div><div class="page-title">ML Pipeline</div><div class="page-sub">Automated weekly retraining · Airflow orchestrated · Vertex AI</div></div>
+    <span class="badge b-green"><span class="dot"></span> All systems healthy</span>
+  </div>
+  <div class="stats" id="pipeline-stats"></div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">Pipeline Stages</div></div>
+    <div class="panel-body" id="pipeline-stages"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-hdr"><div class="panel-title">Recent Runs</div></div>
+    <table><thead><tr><th>Run Date</th><th>Trigger</th><th>Duration</th><th>Records</th><th>New MAPE</th><th>Prev MAPE</th><th>Deployed</th><th>Status</th></tr></thead><tbody id="pipeline-runs"></tbody></table>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ═══ DATA ═══
+const categories = ['Dairy','Beverages','Grains','Personal Care','Snacks','Cleaning','Bakery'];
+const catColors = {'Dairy':'#3b82f6','Beverages':'#14b8a6','Grains':'#f59e0b','Personal Care':'#8b5cf6','Snacks':'#ef4444','Cleaning':'#06b6d4','Bakery':'#10b981'};
+
+const skus = [
+  {id:'SKU-0041',name:'Brookside Whole Milk 500ml',cat:'Dairy',store:'Nairobi CBD',actual:4820,forecast:4910,mape:5.2,stock:1200,reorder:3000,lead:3,trend:[60,65,72,68,75,80,78,85,82,88,90,92]},
+  {id:'SKU-0088',name:'Tusker Lager 500ml 6-Pack',cat:'Beverages',store:'Westlands',actual:2140,forecast:2380,mape:7.8,stock:320,reorder:1800,lead:5,trend:[40,38,42,45,50,55,52,58,60,65,70,75]},
+  {id:'SKU-0122',name:'Pembe Maize Flour 2kg',cat:'Grains',store:'Karen/Suburb',actual:3650,forecast:3720,mape:4.1,stock:900,reorder:2500,lead:2,trend:[70,72,68,75,80,78,82,85,88,85,90,92]},
+  {id:'SKU-0203',name:'Sunlight Dish Soap 750ml',cat:'Cleaning',store:'Mombasa',actual:1820,forecast:1940,mape:9.2,stock:450,reorder:1200,lead:4,trend:[35,38,40,42,38,45,48,50,52,55,58,60]},
+  {id:'SKU-0267',name:'Jogoo Rice 5kg',cat:'Grains',store:'Kampala',actual:2980,forecast:3100,mape:6.3,stock:750,reorder:2000,lead:7,trend:[55,58,60,62,65,68,70,72,75,78,80,82]},
+  {id:'SKU-0314',name:'Colgate Toothpaste 75ml',cat:'Personal Care',store:'Nairobi CBD',actual:1540,forecast:1620,mape:8.5,stock:380,reorder:1000,lead:3,trend:[30,32,34,36,38,40,38,42,44,46,48,50]},
+  {id:'SKU-0389',name:'Pringles Original 165g',cat:'Snacks',store:'Westlands',actual:980,forecast:1150,mape:11.2,stock:180,reorder:800,lead:6,trend:[20,22,25,28,30,32,35,38,40,42,45,48]},
+  {id:'SKU-0421',name:'Brookside Yoghurt 400g',cat:'Dairy',store:'Karen/Suburb',actual:2240,forecast:2180,mape:7.1,stock:560,reorder:1500,lead:2,trend:[42,45,48,46,50,52,54,56,54,58,60,62]},
+  {id:'SKU-0488',name:'Coca-Cola 500ml 12-Pack',cat:'Beverages',store:'Mombasa',actual:3120,forecast:3350,mape:5.8,stock:620,reorder:2200,lead:4,trend:[60,62,65,68,72,70,75,78,80,82,85,88]},
+  {id:'SKU-0502',name:'Weetabix Original 430g',cat:'Bakery',store:'Nairobi CBD',actual:1680,forecast:1720,mape:6.4,stock:420,reorder:1100,lead:5,trend:[32,34,36,38,40,38,42,44,46,48,50,52]},
+  {id:'SKU-0558',name:'Dettol Handwash 250ml',cat:'Personal Care',store:'Kampala',actual:2100,forecast:2280,mape:9.8,stock:290,reorder:1600,lead:6,trend:[38,40,42,44,46,48,50,52,54,56,58,60]},
+  {id:'SKU-0601',name:'Blue Band Margarine 500g',cat:'Dairy',store:'Westlands',actual:1420,forecast:1380,mape:4.9,stock:350,reorder:900,lead:3,trend:[28,30,32,30,34,36,38,36,40,42,44,46]},
+  {id:'SKU-0644',name:'Indomie Noodles 70g x10',cat:'Grains',store:'Karen/Suburb',actual:4200,forecast:4480,mape:7.6,stock:980,reorder:3000,lead:2,trend:[80,82,85,88,90,88,92,95,98,100,102,105]},
+  {id:'SKU-0712',name:'Nice & Lovely Lotion 400ml',cat:'Personal Care',store:'Mombasa',actual:1860,forecast:1920,mape:8.1,stock:460,reorder:1200,lead:4,trend:[35,37,39,41,43,45,44,47,49,51,53,55]},
+  {id:'SKU-0788',name:'Sasko Brown Bread 700g',cat:'Bakery',store:'Nairobi CBD',actual:2580,forecast:2640,mape:5.5,stock:640,reorder:1800,lead:1,trend:[50,52,54,56,58,60,58,62,64,66,68,70]},
+];
+
+const weekLabels = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20'];
+const catData = {
+  'Dairy': [820,850,840,880,910,895,930,950,920,960,980,1010,1040,1080,1120,1150,1180,1220,1260,1300],
+  'Beverages': [620,640,660,700,720,710,740,780,760,800,820,840,860,890,920,950,980,1010,1040,1080],
+  'Grains': [940,960,950,980,1010,990,1020,1050,1040,1070,1090,1110,1130,1160,1190,1210,1240,1260,1290,1320],
+  'Personal Care': [380,390,400,420,410,430,440,450,460,470,480,490,500,510,520,530,540,550,560,570],
+  'Snacks': [280,290,300,320,310,330,340,360,350,370,380,390,400,410,420,430,440,450,460,470],
+};
+
+let selectedCat = 'Dairy';
+let selectedSKU = null;
+
+// ═══ NAV ═══
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  const renders={overview:renderOverview,sku:renderSKUPage,recommendations:renderRecommendations,accuracy:renderAccuracy,pipeline:renderPipeline};
+  if(renders[name])renders[name]();
+}
+
+function fmt(n){return Math.round(n).toLocaleString();}
+
+// ═══ OVERVIEW ═══
+function renderOverview(){
+  // Stats
+  const totalForecast = skus.reduce((s,x)=>s+x.forecast,0);
+  const totalActual = skus.reduce((s,x)=>s+x.actual,0);
+  const avgMAPE = (skus.reduce((s,x)=>s+x.mape,0)/skus.length).toFixed(1);
+  const stockouts = skus.filter(s=>s.stock < s.reorder*0.2).length;
+  document.getElementById('overview-stats').innerHTML = [
+    {lbl:'Total Forecast Units (4W)',val:fmt(totalForecast*4),chg:'↑ 12.4% vs LY',up:true,bar:'#3b82f6'},
+    {lbl:'Forecast Accuracy (MAPE)',val:avgMAPE+'%',chg:'vs 34% baseline',up:true,bar:'#10b981'},
+    {lbl:'SKUs Monitored',val:'847',chg:'14 stores · 7 categories',up:null,bar:'#8b5cf6'},
+    {lbl:'Stockout Risk Alerts',val:stockouts,chg:`${stockouts} SKUs need urgent PO`,up:false,bar:'#ef4444'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="color:${s.bar};">${s.val}</div>${s.up!==null?`<div class="stat-chg ${s.up?'up':'dn'}">${s.chg}</div>`:`<div class="stat-chg muted">${s.chg}</div>`}<div class="stat-bar" style="background:linear-gradient(90deg,${s.bar},transparent);"></div></div>`).join('');
+
+  // Category selector
+  document.getElementById('cat-selector').innerHTML = Object.keys(catData).map(c=>`
+    <button onclick="selectCat('${c}')" id="cat-btn-${c}" style="padding:5px 12px;border-radius:20px;border:1px solid ${c===selectedCat?catColors[c]:'var(--border2)'};background:${c===selectedCat?catColors[c]+'22':'var(--s2)'};color:${c===selectedCat?catColors[c]:'var(--muted)'};cursor:pointer;font-size:11px;font-family:var(--font);transition:all 0.15s;">${c}</button>`).join('');
+
+  renderMainChart();
+
+  // SKU table
+  document.getElementById('sku-table').innerHTML = skus.map(s=>{
+    const diff = s.forecast - s.actual;
+    const diffPct = ((diff/s.actual)*100).toFixed(1);
+    const action = s.stock < s.reorder*0.15 ? `<span class="badge b-red">Urgent PO</span>` : s.stock < s.reorder*0.4 ? `<span class="badge b-amber">Reorder</span>` : `<span class="badge b-green">OK</span>`;
+    return `<tr>
+      <td class="muted" style="font-family:var(--mono);font-size:11px;">${s.id}</td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="badge b-gray">${s.cat}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${s.store}</td>
+      <td class="num">${fmt(s.actual)}</td>
+      <td class="num" style="color:var(--blue2);">${fmt(s.forecast)}</td>
+      <td class="num ${diff>0?'up':'dn'}">${diff>0?'+':''}${diffPct}%</td>
+      <td><span class="badge ${s.mape<=7?'b-green':s.mape<=10?'b-amber':'b-red'}">${s.mape}%</span></td>
+      <td>${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectCat(cat){
+  selectedCat=cat;
+  document.querySelectorAll('[id^="cat-btn-"]').forEach(b=>{
+    const c=b.id.replace('cat-btn-','');
+    b.style.borderColor=c===cat?catColors[c]:'var(--border2)';
+    b.style.background=c===cat?catColors[c]+'22':'var(--s2)';
+    b.style.color=c===cat?catColors[c]:'var(--muted)';
+  });
+  renderMainChart();
+}
+
+function renderMainChart(){
+  const data=catData[selectedCat]||catData['Dairy'];
+  const color=catColors[selectedCat]||'#3b82f6';
+  const max=Math.max(...data);
+  const splitAt=12; // history vs forecast
+  const chart=document.getElementById('main-chart');
+  chart.innerHTML=data.map((v,i)=>`
+    <div class="fc-col" ${i===splitAt?'style="position:relative;"':''}>
+      ${i===splitAt?'<div class="fc-divider"></div>':''}
+      <div class="fc-bar ${i<splitAt?'actual':i===splitAt?'highlight':'forecast'}" 
+        style="height:${Math.max(6,Math.round((v/max)*160))}px;${i>=splitAt&&i!==splitAt?`background:linear-gradient(to top,${color}44,${color}88);border-color:${color}66;`:''}${i===splitAt?`background:linear-gradient(to top,${color},${color}cc);`:''}${i<splitAt?`background:linear-gradient(to top,${color}88,${color});`:''};"
+        title="${weekLabels[i]}: ${fmt(v)} units"></div>
+      <div class="fc-label">${weekLabels[i]}</div>
+    </div>`).join('');
+}
+
+// ═══ SKU PAGE ═══
+function renderSKUPage(){
+  const filter=document.getElementById('sku-cat-filter')?.value||'';
+  const filtered=filter?skus.filter(s=>s.cat===filter):skus;
+  document.getElementById('sku-cards').innerHTML=filtered.map(s=>`
+    <div class="sku-card ${selectedSKU===s.id?'active':''}" onclick="selectSKU('${s.id}')">
+      <div class="sku-name">${s.name.split(' ').slice(0,3).join(' ')}</div>
+      <div class="sku-cat">${s.id} · ${s.cat}</div>
+      <div class="sku-acc" style="color:${s.mape<=7?'var(--green)':s.mape<=10?'var(--amber)':'var(--red)'};">MAPE: ${s.mape}%</div>
+      <div class="sparkline">${s.trend.map((v,i)=>`<div class="spark-bar" style="height:${Math.round((v/Math.max(...s.trend))*22)}px;background:${catColors[s.cat]||'#3b82f6'};opacity:${i===s.trend.length-1?1:0.5};"></div>`).join('')}</div>
+    </div>`).join('');
+  if(selectedSKU)selectSKU(selectedSKU);
+}
+
+function selectSKU(id){
+  selectedSKU=id;
+  document.querySelectorAll('.sku-card').forEach(c=>c.classList.remove('active'));
+  const card=document.querySelector(`.sku-card[onclick="selectSKU('${id}')"]`);
+  if(card)card.classList.add('active');
+  const s=skus.find(x=>x.id===id);
+  if(!s)return;
+  const panel=document.getElementById('sku-detail-panel');
+  panel.style.display='block';
+  document.getElementById('sku-detail-title').textContent=`${s.name} — ${s.id}`;
+  const max=Math.max(...s.trend);
+  const color=catColors[s.cat]||'#3b82f6';
+  const coverage=(s.stock/s.forecast*7).toFixed(1);
+  document.getElementById('sku-detail-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+      ${[
+        ['4W Forecast',fmt(s.forecast)+' units',color],
+        ['4W Actual',fmt(s.actual)+' units','var(--text)'],
+        ['MAPE',s.mape+'%',s.mape<=7?'var(--green)':s.mape<=10?'var(--amber)':'var(--red)'],
+        ['Stock Cover',coverage+' days',parseFloat(coverage)<14?'var(--red)':'var(--green)'],
+      ].map(([l,v,c])=>`<div style="background:var(--s2);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono);">${l}</div><div style="font-size:18px;font-weight:700;color:${c};">${v}</div></div>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);">12-WEEK DEMAND TREND</div>
+    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:4px;">
+      ${s.trend.map((v,i)=>`<div style="flex:1;height:${Math.round((v/max)*78)}px;background:${i===s.trend.length-1?color:color+'66'};border-radius:3px 3px 0 0;min-height:3px;" title="Week ${i+1}: ${v}"></div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:16px;"><span>12 weeks ago</span><span>This week</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:var(--s2);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;margin-bottom:8px;">Inventory Status</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Current Stock</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px;">${fmt(s.stock)} units</div>
+        <div class="prog-track"><div class="prog-fill" style="width:${Math.round((s.stock/s.reorder)*100)}%;background:${s.stock<s.reorder*0.2?'var(--red)':s.stock<s.reorder*0.5?'var(--amber)':'var(--green)'};"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">${Math.round((s.stock/s.reorder)*100)}% of reorder level</div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;margin-bottom:8px;">Recommendation</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Suggested PO Quantity</div>
+        <div style="font-size:16px;font-weight:600;color:${color};margin-bottom:4px;">${fmt(s.reorder)} units</div>
+        <div style="font-size:11px;color:var(--muted);">Lead time: ${s.lead} days</div>
+        <button style="margin-top:8px;padding:5px 12px;background:${color}22;border:1px solid ${color}44;border-radius:5px;color:${color};font-size:11px;cursor:pointer;font-family:var(--font);">Generate PO →</button>
+      </div>
+    </div>`;
+}
+
+// ═══ RECOMMENDATIONS ═══
+function renderRecommendations(){
+  const urgent=skus.filter(s=>s.stock<s.reorder*0.2);
+  const order=skus.filter(s=>s.stock>=s.reorder*0.2&&s.stock<s.reorder*0.5);
+  const reduce=skus.filter(s=>s.stock>s.reorder*1.5);
+  const totalPOValue=skus.reduce((sum,s)=>sum+(s.reorder*12),0);
+
+  document.getElementById('po-stats').innerHTML=[
+    {lbl:'Urgent POs Required',val:urgent.length,bar:'var(--red)'},
+    {lbl:'Standard Reorders',val:order.length,bar:'var(--blue2)'},
+    {lbl:'Estimated PO Value',val:'KSh '+fmt(totalPOValue),bar:'var(--green)'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="color:${s.bar};font-size:20px;">${s.val}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar},transparent);"></div></div>`).join('');
+
+  document.getElementById('urgent-recs').innerHTML=urgent.map(s=>`
+    <div class="rec-card urgent">
+      <div class="rec-title">${s.name}</div>
+      <div class="rec-sub">${s.id} · ${s.store}<br>Stock: ${fmt(s.stock)} units · ${(s.stock/s.forecast*7).toFixed(0)} days cover remaining</div>
+      <span class="rec-action urgent">Order ${fmt(s.reorder)} units · Lead ${s.lead}d</span>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:12px;">No urgent stockouts</div>';
+
+  document.getElementById('order-recs').innerHTML=order.map(s=>`
+    <div class="rec-card order">
+      <div class="rec-title">${s.name}</div>
+      <div class="rec-sub">${s.id} · ${s.store}<br>4W Forecast: ${fmt(s.forecast)} units</div>
+      <span class="rec-action order">Order ${fmt(s.reorder)} units</span>
+    </div>`).join('');
+
+  document.getElementById('reduce-recs').innerHTML=reduce.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${reduce.map(s=>`
+    <div class="rec-card reduce">
+      <div class="rec-title">${s.name}</div>
+      <div class="rec-sub">Overstock: ${fmt(s.stock)} vs ${fmt(s.reorder)} needed</div>
+      <span class="rec-action reduce">Reduce next order by 40%</span>
+    </div>`).join('')}</div>`:'<div style="color:var(--muted);font-size:12px;">No overstock detected</div>';
+}
+
+// ═══ ACCURACY ═══
+function renderAccuracy(){
+  const mapeBycat=[
+    {cat:'Bakery',mape:6.1},{cat:'Dairy',mape:6.8},{cat:'Grains',mape:7.2},
+    {cat:'Beverages',mape:7.9},{cat:'Personal Care',mape:9.1},{cat:'Snacks',mape:10.4},{cat:'Cleaning',mape:8.8},
+  ].sort((a,b)=>a.mape-b.mape);
+  const maxMape=Math.max(...mapeBycat.map(x=>x.mape));
+
+  document.getElementById('mape-chart').innerHTML=mapeBycat.map(x=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:90px;font-size:11px;color:var(--muted);flex-shrink:0;">${x.cat}</div>
+      <div class="prog-track" style="flex:1;"><div class="prog-fill" style="width:${Math.round((x.mape/maxMape)*100)}%;background:${x.mape<=7?'var(--green)':x.mape<=10?'var(--amber)':'var(--red)'};"></div></div>
+      <div style="font-size:11px;font-family:var(--mono);color:${x.mape<=7?'var(--green)':x.mape<=10?'var(--amber)':'var(--red)'};width:40px;text-align:right;">${x.mape}%</div>
+    </div>`).join('');
+
+  document.getElementById('baseline-chart').innerHTML=[
+    {name:'Our Ensemble',mape:8.6,color:'var(--green)'},
+    {name:'LightGBM only',mape:11.2,color:'var(--blue2)'},
+    {name:'LSTM only',mape:13.8,color:'var(--purple)'},
+    {name:'Moving Average',mape:34.0,color:'var(--red)'},
+    {name:'Rule-based',mape:28.5,color:'var(--amber)'},
+  ].map(m=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:100px;font-size:11px;flex-shrink:0;">${m.name}</div>
+      <div class="prog-track" style="flex:1;"><div class="prog-fill" style="width:${Math.round((m.mape/34)*100)}%;background:${m.color};"></div></div>
+      <div style="font-size:11px;font-family:var(--mono);color:${m.color};width:40px;text-align:right;">${m.mape}%</div>
+    </div>`).join('');
+
+  const accTrend=[88,89,90,89,91,90,92,91,93,92,91,93];
+  const maxAcc=100;
+  document.getElementById('acc-trend-chart').innerHTML=accTrend.map((v,i)=>`
+    <div class="fc-col">
+      <div class="fc-bar actual" style="height:${Math.round((v/maxAcc)*160)}px;background:linear-gradient(to top,#10b981,#34d399);" title="W${i+1}: ${v}% within 10%"></div>
+      <div class="fc-label">W${i+1}</div>
+    </div>`).join('');
+
+  document.getElementById('feature-importance').innerHTML=[
+    {feat:'Lagged sales (7d)',imp:92,type:'Time series'},
+    {feat:'Rolling avg (30d)',imp:88,type:'Time series'},
+    {feat:'Day of week',imp:76,type:'Calendar'},
+    {feat:'Promotion flag',imp:72,type:'Marketing'},
+    {feat:'Lagged sales (14d)',imp:68,type:'Time series'},
+    {feat:'Public holiday',imp:61,type:'Calendar'},
+    {feat:'Store cluster',imp:54,type:'Store attr'},
+    {feat:'Product lifecycle',imp:48,type:'Product attr'},
+    {feat:'Regional econ index',imp:38,type:'External'},
+  ].map(f=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+      <div style="width:160px;font-size:11px;flex-shrink:0;">${f.feat}</div>
+      <div class="prog-track" style="flex:1;"><div class="prog-fill" style="width:${f.imp}%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);"></div></div>
+      <div style="font-size:10px;color:var(--muted);width:80px;text-align:right;font-family:var(--mono);">${f.type}</div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--blue2);width:30px;text-align:right;">${f.imp}</div>
+    </div>`).join('');
+}
+
+// ═══ PIPELINE ═══
+function renderPipeline(){
+  document.getElementById('pipeline-stats').innerHTML=[
+    {lbl:'Last Run',val:'Sun 05:12 EAT',bar:'var(--green)'},
+    {lbl:'Next Run',val:'Sun 05:00 EAT',bar:'var(--blue2)'},
+    {lbl:'Avg Duration',val:'42 min',bar:'var(--purple)'},
+    {lbl:'Records Processed',val:'22.4M',bar:'var(--amber)'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="color:${s.bar};font-size:16px;margin-top:2px;">${s.val}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar},transparent);"></div></div>`).join('');
+
+  const stages=[
+    {name:'Data Validation',desc:'Checks for missing stores, outliers, schema changes',dur:'4 min',status:'ok'},
+    {name:'Feature Engineering',desc:'140 features: lags, rolling averages, calendar, promotions',dur:'8 min',status:'ok'},
+    {name:'LightGBM Training',desc:'Tabular model on cross-SKU demand patterns',dur:'12 min',status:'ok'},
+    {name:'LSTM Training',desc:'Per-category sequence model on weekly demand',dur:'18 min',status:'ok'},
+    {name:'Ensemble Blending',desc:'Meta-learner weights learned on validation set',dur:'6 min',status:'ok'},
+    {name:'Evaluation Gate',desc:'New model must beat current MAPE to deploy',dur:'3 min',status:'ok'},
+    {name:'Deployment',desc:'Push predictions to BigQuery + planning dashboard',dur:'2 min',status:'ok'},
+  ];
+  document.getElementById('pipeline-stages').innerHTML=`<div style="position:relative;">${stages.map((s,i)=>`
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:${i<stages.length-1?'0':'0'};">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;flex-shrink:0;">✓</div>
+        ${i<stages.length-1?`<div style="width:2px;height:32px;background:rgba(16,185,129,0.3);"></div>`:''}
+      </div>
+      <div style="padding-bottom:${i<stages.length-1?'16':'0'}px;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;font-weight:600;">${s.name}</div>
+          <span class="badge b-gray" style="font-family:var(--mono);">${s.dur}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">${s.desc}</div>
+      </div>
+    </div>`).join('')}</div>`;
+
+  document.getElementById('pipeline-runs').innerHTML=[
+    {date:'Sun 12 Jan 05:12',trig:'Scheduled',dur:'41m',rec:'22.4M',newM:8.6,prevM:8.9,dep:true,ok:true},
+    {date:'Sun 05 Jan 05:08',trig:'Scheduled',dur:'39m',rec:'22.1M',newM:8.9,prevM:9.1,dep:true,ok:true},
+    {date:'Wed 01 Jan 14:22',trig:'Manual',dur:'43m',rec:'22.0M',newM:9.1,prevM:9.1,dep:false,ok:true},
+    {date:'Sun 29 Dec 05:15',trig:'Scheduled',dur:'44m',rec:'21.8M',newM:9.1,prevM:8.8,dep:false,ok:false},
+    {date:'Sun 22 Dec 05:09',trig:'Scheduled',dur:'40m',rec:'21.6M',newM:8.8,prevM:9.0,dep:true,ok:true},
+  ].map(r=>`<tr>
+    <td class="muted" style="font-family:var(--mono);font-size:11px;">${r.date}</td>
+    <td><span class="badge ${r.trig==='Manual'?'b-purple':'b-gray'}">${r.trig}</span></td>
+    <td class="muted">${r.dur}</td>
+    <td class="num muted" style="font-family:var(--mono);">${r.rec}</td>
+    <td class="num" style="color:var(--blue2);font-family:var(--mono);">${r.newM}%</td>
+    <td class="num muted" style="font-family:var(--mono);">${r.prevM}%</td>
+    <td>${r.dep?`<span class="badge b-green">Deployed</span>`:`<span class="badge b-gray">Skipped</span>`}</td>
+    <td>${r.ok?`<span class="badge b-green">✓ Passed</span>`:`<span class="badge b-red">✗ Failed gate</span>`}</td>
+  </tr>`).join('');
+}
+
+// ═══ RETRAIN ANIMATION ═══
+async function animateRetrain(){
+  const btn=document.querySelector('.retrain-btn');
+  btn.disabled=true;
+  const steps=['Validating data...','Engineering features...','Training LightGBM...','Training LSTM...','Blending ensemble...','Evaluating...','Deploying!'];
+  for(const s of steps){btn.textContent=s;await new Promise(r=>setTimeout(r,600));}
+  btn.textContent='✓ Retrained — MAPE: 8.4%';
+  btn.style.background='rgba(16,185,129,0.15)';
+  btn.style.borderColor='rgba(16,185,129,0.3)';
+  btn.style.color='var(--green)';
+  setTimeout(()=>{btn.textContent='↺ Trigger Retraining';btn.style.background='';btn.style.borderColor='';btn.style.color='';btn.disabled=false;},3000);
+}
+
+// ═══ INIT ═══
+renderOverview();
+</script>
+</body>
+</html>

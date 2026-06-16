@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetailPulse — Chain Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafaf8;--s1:#ffffff;--s2:#f5f4f0;--s3:#eceae4;--s4:#e2dfd8;
+  --border:#e8e5de;--border2:#d4d0c8;
+  --ink:#111210;--ink2:#2a2a26;--muted:#7a7a72;--muted2:#a8a8a0;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --accent:#111210;
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'Fira Code',monospace;
+  --sidebar-w:218px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;font-size:13px;}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--ink);display:flex;flex-direction:column;
+  transition:transform 0.3s ease;
+  z-index:100;
+}
+.logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.logo-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.4px;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.35);font-family:var(--mono);margin-top:2px;}
+.chain-badge{margin:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;}
+.chain-label{font-size:9px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--mono);margin-bottom:3px;}
+.chain-name{font-size:12px;font-weight:600;color:#fff;}
+.chain-stores{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.nav{flex:1;padding:10px 0;overflow-y:auto;}
+.nav-sec{padding:14px 18px 5px;font-size:9px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:12px;font-weight:500;transition:all 0.15s;border-left:2px solid transparent;}
+.nav-item:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.05);}
+.nav-item.active{color:#fff;background:rgba(255,255,255,0.1);border-left-color:#fff;}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.date-badge{margin:10px 14px 14px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:10px;color:rgba(255,255,255,0.3);font-family:var(--mono);}
+
+/* Hamburger toggle – hidden on desktop */
+.menu-toggle{
+  display:none;position:fixed;top:10px;left:10px;z-index:200;
+  background:var(--ink);border:none;border-radius:8px;
+  width:38px;height:38px;cursor:pointer;
+  flex-direction:column;align-items:center;justify-content:center;gap:5px;
+}
+.menu-toggle span{display:block;width:18px;height:2px;background:#fff;border-radius:2px;transition:all 0.2s;}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:90;opacity:0;transition:opacity 0.3s;
+}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;background:var(--bg);min-width:0;}
+.page{display:none;}.page.active{display:block;}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:0 20px;display:flex;align-items:center;
+  justify-content:space-between;min-height:52px;
+  position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:8px;
+  padding-top:6px;padding-bottom:6px;
+}
+.topbar-title{font-size:15px;font-weight:700;color:var(--ink);}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.btn{padding:6px 12px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all 0.15s;white-space:nowrap;}
+.btn-dark{background:var(--ink);color:#fff;}.btn-dark:hover{background:var(--ink2);}
+.btn-ghost{background:var(--s2);color:var(--ink);border:1px solid var(--border2);}.btn-ghost:hover{background:var(--s3);}
+.sel{background:var(--s2);border:1px solid var(--border2);border-radius:7px;padding:5px 8px;color:var(--ink);font-family:var(--font);font-size:12px;outline:none;font-weight:500;max-width:140px;}
+
+/* ── PAGE BODY ── */
+.page-body{padding:16px 20px;}
+
+/* ── STATS GRID ── */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-bottom:18px;
+}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.stat-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-0.8px;color:var(--ink);line-height:1;}
+.stat-chg{font-size:11px;font-weight:600;margin-top:5px;}
+.stat-chg.up{color:var(--green);}.stat-chg.dn{color:var(--red);}
+.stat-bar{position:absolute;bottom:0;left:0;right:0;height:3px;}
+.stat-icon{position:absolute;top:14px;right:14px;font-size:20px;opacity:0.15;}
+
+/* ── PANELS ── */
+.panel{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.panel-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.panel-title{font-size:13px;font-weight:700;color:var(--ink);}
+.panel-body{padding:18px;}
+
+/* ── SVG BAR CHARTS ── */
+.chart-wrap{width:100%;overflow:hidden;}
+.chart-wrap svg{display:block;width:100%;}
+
+/* ── HORIZONTAL BARS ── */
+.h-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.h-bar-label{font-size:12px;color:var(--ink2);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.h-bar-track{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden;}
+.h-bar-fill{height:100%;border-radius:4px;}
+.h-bar-val{font-size:11px;font-family:var(--mono);font-weight:600;width:60px;text-align:right;flex-shrink:0;}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:500px;}
+th{padding:9px 12px;text-align:left;font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;font-weight:400;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.04);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--s2);}
+.num{font-family:var(--mono);text-align:right;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--mono);}
+.b-green{background:var(--green-bg);color:var(--green);}
+.b-red{background:var(--red-bg);color:var(--red);}
+.b-amber{background:var(--amber-bg);color:var(--amber);}
+.b-blue{background:var(--blue-bg);color:var(--blue);}
+.b-gray{background:var(--s3);color:var(--muted);}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+
+/* ── GRID LAYOUTS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+
+/* ── KPI CARD ── */
+.kpi-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+.kpi-val{font-size:28px;font-weight:800;letter-spacing:-1px;}
+.kpi-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:500;}
+.kpi-chg{font-size:12px;font-weight:700;margin-top:6px;}
+
+/* ── TRAFFIC LIGHT ── */
+.tl{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.tl-green{background:var(--green);}
+.tl-amber{background:var(--amber);}
+.tl-red{background:var(--red);}
+
+/* ── PROGRESS ── */
+.prog-track{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;margin-top:4px;}
+.prog-fill{height:100%;border-radius:3px;}
+.muted{color:var(--muted);}
+.up{color:var(--green);}.dn{color:var(--red);}
+
+/* ── SPARKLINE ── */
+.spark{display:flex;align-items:flex-end;gap:2px;height:28px;}
+.spark-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px;}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+
+/* Tablet ≤ 900px */
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .grid2{grid-template-columns:1fr;}
+  .grid3{grid-template-columns:repeat(2,1fr);}
+}
+
+/* Mobile ≤ 640px */
+@media(max-width:640px){
+  .app{display:block;height:auto;overflow:visible;}
+
+  /* floating sidebar */
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;
+    transform:translateX(-100%);
+    box-shadow:4px 0 24px rgba(0,0,0,0.3);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;opacity:1;}
+  .menu-toggle{display:flex;}
+
+  .main{
+    height:100vh;overflow-y:auto;
+    padding-top:0;
+  }
+
+  .topbar{padding-left:54px;} /* room for hamburger */
+
+  .stats{grid-template-columns:1fr 1fr;}
+  .grid2{grid-template-columns:1fr;}
+  .grid3{grid-template-columns:1fr 1fr;}
+
+  .stat-val{font-size:18px;}
+  .kpi-val{font-size:22px;}
+  .page-body{padding:12px 14px;}
+  .btn-ghost:not(.keep){display:none;}
+  .sel{max-width:110px;font-size:11px;}
+  .topbar-right{gap:4px;}
+}
+
+/* Very small ≤ 380px */
+@media(max-width:380px){
+  .stats{grid-template-columns:1fr;}
+  .grid3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Mobile hamburger -->
+<button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-name">RetailPulse</div>
+    <div class="logo-sub">Chain Analytics Dashboard</div>
+  </div>
+  <div class="chain-badge">
+    <div class="chain-label">Chain</div>
+    <div class="chain-name">Savannah Mart Group</div>
+    <div class="chain-stores">14 stores · Kenya & Uganda</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Analytics</div>
+    <div class="nav-item active" onclick="showPage('sales')" data-page="sales"><span class="nav-icon">📈</span> Sales & Revenue</div>
+    <div class="nav-item" onclick="showPage('stores')" data-page="stores"><span class="nav-icon">🏪</span> Store Performance</div>
+    <div class="nav-item" onclick="showPage('inventory')" data-page="inventory"><span class="nav-icon">📦</span> Inventory</div>
+    <div class="nav-sec">Executive</div>
+    <div class="nav-item" onclick="showPage('executive')" data-page="executive"><span class="nav-icon">📊</span> Executive KPIs</div>
+    <div class="nav-item" onclick="showPage('customers')" data-page="customers"><span class="nav-icon">👥</span> Customer Insights</div>
+  </nav>
+  <div class="date-badge">Last updated: Today 06:42 EAT</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ══════════ SALES & REVENUE ══════════ -->
+<div class="page active" id="page-sales">
+  <div class="topbar">
+    <div><div class="topbar-title">Sales & Revenue</div><div class="topbar-sub">Real-time across all 14 stores</div></div>
+    <div class="topbar-right">
+      <select class="sel" id="sales-period" onchange="renderSales()"><option value="week">This Week</option><option value="month">This Month</option><option value="quarter">This Quarter</option></select>
+      <select class="sel" id="sales-store" onchange="renderSales()"><option value="all">All Stores</option><option value="nbi">Nairobi CBD</option><option value="wes">Westlands</option><option value="mom">Mombasa</option><option value="kla">Kampala</option></select>
+      <button class="btn btn-ghost keep">Export</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="stats" id="sales-stats"></div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Daily Revenue — This Month</div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" id="daily-rev-chart"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Revenue by Category</div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" id="cat-rev-chart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Top 15 Products by Revenue</div><span class="badge b-gray">This month</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Product</th><th>Category</th><th class="num">Units Sold</th><th class="num">Revenue</th><th class="num">Margin</th><th>vs Last Month</th><th>Trend</th></tr></thead>
+      <tbody id="product-table"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ STORE PERFORMANCE ══════════ -->
+<div class="page" id="page-stores">
+  <div class="topbar">
+    <div><div class="topbar-title">Store Performance</div><div class="topbar-sub">14 stores ranked by KPIs</div></div>
+    <div class="topbar-right">
+      <select class="sel" id="store-metric" onchange="renderStores()"><option value="revenue">By Revenue</option><option value="margin">By Margin</option><option value="growth">By Growth</option><option value="transactions">By Transactions</option></select>
+      <button class="btn btn-ghost keep">Export</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="stats" id="store-stats"></div>
+    <div class="grid2">
+      <div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">Store Leaderboard</div></div>
+          <div class="table-wrap"><table><thead><tr><th>#</th><th>Store</th><th>City</th><th class="num">Revenue</th><th class="num">Margin</th><th>Growth</th><th>Status</th></tr></thead>
+          <tbody id="store-table"></tbody></table></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel" style="margin-bottom:14px;">
+          <div class="panel-hdr"><div class="panel-title">Revenue by Region</div></div>
+          <div class="panel-body" id="region-chart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">Store Health Summary</div></div>
+          <div class="panel-body" id="store-health"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Store Revenue Bar Chart -->
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-hdr"><div class="panel-title">Store Revenue Comparison</div></div>
+      <div class="panel-body"><div class="chart-wrap" id="store-bar-chart"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ INVENTORY ══════════ -->
+<div class="page" id="page-inventory">
+  <div class="topbar">
+    <div><div class="topbar-title">Inventory Management</div><div class="topbar-sub">Stock levels, stockouts and reorder alerts</div></div>
+    <div class="topbar-right">
+      <select class="sel"><option>All Categories</option><option>Dairy</option><option>Beverages</option><option>Grains</option><option>Personal Care</option></select>
+      <button class="btn btn-dark">+ Reorder Alert</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="stats" id="inv-stats"></div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Stock Levels by Category</div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" id="stock-chart"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Stockout Risk — Next 7 Days</div><span class="badge b-red" id="stockout-count"></span></div>
+        <div class="panel-body" id="stockout-list"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Inventory Status — All SKUs</div></div>
+      <div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th class="num">In Stock</th><th class="num">Reorder Level</th><th class="num">Days Cover</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="inv-table"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ EXECUTIVE KPIs ══════════ -->
+<div class="page" id="page-executive">
+  <div class="topbar">
+    <div><div class="topbar-title">Executive KPI Dashboard</div><div class="topbar-sub">Board-level overview · Savannah Mart Group</div></div>
+    <div class="topbar-right">
+      <select class="sel"><option>FY 2024/25</option><option>FY 2023/24</option></select>
+      <button class="btn btn-ghost keep">IC Report</button>
+      <button class="btn btn-dark">Export PDF</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="grid3" style="margin-bottom:14px;" id="exec-kpis"></div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Monthly Revenue — FY 2024/25</div></div>
+        <div class="panel-body"><div class="chart-wrap" id="exec-rev-chart"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Gross Margin Trend</div></div>
+        <div class="panel-body"><div class="chart-wrap" id="exec-margin-chart"></div></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Strategic KPI Scorecard</div></div>
+        <div class="table-wrap"><table><thead><tr><th>KPI</th><th class="num">Target</th><th class="num">Actual</th><th>Status</th><th>Trend</th></tr></thead>
+        <tbody id="kpi-scorecard"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Revenue Mix</div></div>
+        <div class="panel-body" id="revenue-mix"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CUSTOMERS ══════════ -->
+<div class="page" id="page-customers">
+  <div class="topbar">
+    <div><div class="topbar-title">Customer Insights</div><div class="topbar-sub">Behaviour, loyalty and basket analysis</div></div>
+    <div class="topbar-right"><button class="btn btn-ghost keep">Export</button></div>
+  </div>
+  <div class="page-body">
+    <div class="stats" id="cust-stats"></div>
+    <div class="grid2" style="margin-bottom:14px;">
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Customer Segments</div></div>
+        <div class="panel-body" id="cust-segments"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hdr"><div class="panel-title">Top Basket Combinations</div></div>
+        <div class="panel-body" id="basket-combos"></div>
+      </div>
+    </div>
+    <!-- Customer Segment Bar Chart -->
+    <div class="panel" style="margin-bottom:14px;">
+      <div class="panel-hdr"><div class="panel-title">Customer Count by Segment</div></div>
+      <div class="panel-body"><div class="chart-wrap" id="cust-bar-chart"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">Customer Lifetime Value by Segment</div></div>
+      <div class="table-wrap"><table><thead><tr><th>Segment</th><th class="num">Customers</th><th class="num">Avg Basket</th><th class="num">Monthly Visits</th><th class="num">Annual CLV</th><th>Loyalty Score</th><th>Retention</th></tr></thead>
+      <tbody id="clv-table"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ═══ DATA ═══
+const stores = [
+  {id:'s1',name:'Savannah Nairobi CBD',city:'Nairobi',region:'Nairobi',rev:4820000,margin:22.4,growth:18,transactions:12400,status:'healthy',spark:[72,75,78,74,80,82,85,84,88,90,92,95]},
+  {id:'s2',name:'Savannah Westlands',city:'Nairobi',region:'Nairobi',rev:3960000,margin:24.1,growth:22,transactions:9800,status:'healthy',spark:[60,62,65,68,70,72,75,74,78,80,82,85]},
+  {id:'s3',name:'Savannah Karen',city:'Nairobi',region:'Nairobi',rev:3420000,margin:26.8,growth:15,transactions:7200,status:'healthy',spark:[55,57,58,60,62,65,64,68,70,72,74,76]},
+  {id:'s4',name:'Savannah Mombasa Central',city:'Mombasa',region:'Coast',rev:2980000,margin:20.2,growth:28,transactions:8400,status:'healthy',spark:[48,50,52,54,58,60,62,65,68,70,72,75]},
+  {id:'s5',name:'Savannah Nyali',city:'Mombasa',region:'Coast',rev:2240000,margin:19.8,growth:19,transactions:6200,status:'healthy',spark:[38,40,42,44,46,48,50,52,54,56,58,60]},
+  {id:'s6',name:'Savannah Nakuru',city:'Nakuru',region:'Rift Valley',rev:1980000,margin:18.4,growth:11,transactions:5800,status:'watch',spark:[34,35,36,37,38,36,38,39,40,41,42,43]},
+  {id:'s7',name:'Savannah Eldoret',city:'Eldoret',region:'Rift Valley',rev:1740000,margin:17.9,growth:14,transactions:5100,status:'healthy',spark:[30,31,32,33,34,35,36,37,38,39,40,41]},
+  {id:'s8',name:'Savannah Kisumu',city:'Kisumu',region:'Nyanza',rev:1620000,margin:18.2,growth:24,transactions:4800,status:'healthy',spark:[28,29,30,32,33,35,36,37,38,39,40,41]},
+  {id:'s9',name:'Savannah Thika',city:'Thika',region:'Nairobi Metro',rev:1480000,margin:16.9,growth:8,transactions:4400,status:'watch',spark:[26,26,27,28,28,29,29,30,30,31,32,32]},
+  {id:'s10',name:'Savannah Kiambu',city:'Kiambu',region:'Nairobi Metro',rev:1360000,margin:17.4,growth:12,transactions:4100,status:'healthy',spark:[24,25,25,26,27,27,28,28,29,29,30,31]},
+  {id:'s11',name:'Savannah Kampala Kololo',city:'Kampala',region:'Uganda',rev:2640000,margin:21.6,growth:31,transactions:7600,status:'healthy',spark:[42,44,46,48,50,52,55,57,60,62,64,67]},
+  {id:'s12',name:'Savannah Kampala Ntinda',city:'Kampala',region:'Uganda',rev:1980000,margin:20.1,growth:26,transactions:5900,status:'healthy',spark:[34,36,38,40,42,44,46,48,50,52,54,56]},
+  {id:'s13',name:'Savannah Nanyuki',city:'Nanyuki',region:'Mount Kenya',rev:820000,margin:15.8,growth:6,transactions:2600,status:'low',spark:[14,14,15,15,15,14,15,15,16,16,16,17]},
+  {id:'s14',name:'Savannah Malindi',city:'Malindi',region:'Coast',rev:680000,margin:14.2,growth:4,transactions:2100,status:'low',spark:[12,12,12,13,13,12,13,13,13,14,14,14]},
+];
+
+const products = [
+  {name:'Brookside Whole Milk 500ml',cat:'Dairy',units:18420,rev:736800,margin:24,vsLast:12,spark:[60,65,70,68,75,80]},
+  {name:'Coca-Cola 500ml Crate',cat:'Beverages',units:9840,rev:590400,margin:19,vsLast:8,spark:[50,52,55,54,58,60]},
+  {name:'Pembe Maize Flour 2kg',cat:'Grains',units:14200,rev:567800,margin:16,vsLast:21,spark:[55,58,62,65,68,72]},
+  {name:'Tusker Lager 500ml 6-Pack',cat:'Beverages',units:7620,rev:533400,margin:22,vsLast:15,spark:[45,48,50,52,55,58]},
+  {name:'Jogoo Rice 5kg',cat:'Grains',units:8900,rev:489500,margin:18,vsLast:9,spark:[42,44,46,48,50,52]},
+  {name:'Colgate Toothpaste 75ml',cat:'Personal Care',units:12400,rev:434000,margin:28,vsLast:6,spark:[38,40,42,41,44,46]},
+  {name:'Blue Band Margarine 500g',cat:'Dairy',units:9200,rev:414000,margin:21,vsLast:11,spark:[36,38,40,39,42,44]},
+  {name:'Sunlight Dish Soap 750ml',cat:'Cleaning',units:10800,rev:378000,margin:23,vsLast:7,spark:[34,36,38,37,40,42]},
+  {name:'Dettol Handwash 250ml',cat:'Personal Care',units:8600,rev:360200,margin:30,vsLast:18,spark:[32,34,36,38,40,42]},
+  {name:'Sasko Brown Bread 700g',cat:'Bakery',units:11400,rev:342000,margin:17,vsLast:5,spark:[30,31,32,33,34,36]},
+  {name:'Indomie Noodles 70g x10',cat:'Grains',units:13200,rev:330000,margin:20,vsLast:24,spark:[28,30,32,34,36,38]},
+  {name:'Nice & Lovely Lotion 400ml',cat:'Personal Care',units:7800,rev:312000,margin:26,vsLast:13,spark:[26,27,28,29,30,32]},
+  {name:'Brookside Yoghurt 400g',cat:'Dairy',units:6400,rev:288000,margin:22,vsLast:9,spark:[24,25,26,27,28,30]},
+  {name:'Pringles Original 165g',cat:'Snacks',units:4800,rev:264000,margin:29,vsLast:16,spark:[22,23,24,25,26,28]},
+  {name:'Weetabix Original 430g',cat:'Bakery',units:5200,rev:249600,margin:24,vsLast:10,spark:[20,21,22,23,24,25]},
+];
+
+const skuInventory = [
+  {id:'SKU-041',name:'Brookside Whole Milk 500ml',cat:'Dairy',stock:1200,reorder:3000,days:4},
+  {id:'SKU-088',name:'Tusker Lager 500ml 6-Pack',cat:'Beverages',stock:320,reorder:1800,days:2},
+  {id:'SKU-122',name:'Pembe Maize Flour 2kg',cat:'Grains',stock:2800,reorder:2500,days:18},
+  {id:'SKU-203',name:'Sunlight Dish Soap 750ml',cat:'Cleaning',stock:1450,reorder:1200,days:12},
+  {id:'SKU-267',name:'Jogoo Rice 5kg',cat:'Grains',stock:750,reorder:2000,days:5},
+  {id:'SKU-314',name:'Colgate Toothpaste 75ml',cat:'Personal Care',stock:3800,reorder:1000,days:28},
+  {id:'SKU-389',name:'Pringles Original 165g',cat:'Snacks',stock:180,reorder:800,days:3},
+  {id:'SKU-421',name:'Brookside Yoghurt 400g',cat:'Dairy',stock:860,reorder:1500,days:9},
+  {id:'SKU-488',name:'Coca-Cola 500ml Crate',cat:'Beverages',stock:420,reorder:2200,days:3},
+  {id:'SKU-502',name:'Weetabix Original 430g',cat:'Bakery',stock:1620,reorder:1100,days:22},
+  {id:'SKU-558',name:'Dettol Handwash 250ml',cat:'Personal Care',stock:290,reorder:1600,days:3},
+  {id:'SKU-601',name:'Blue Band Margarine 500g',cat:'Dairy',stock:2100,reorder:900,days:20},
+];
+
+const monthlyRev = [3.8,4.1,3.9,4.4,4.2,4.8,4.6,5.1,4.9,5.4,5.2,5.8];
+const monthlyMargin = [20.1,20.4,20.2,21.0,20.8,21.4,21.2,22.0,21.8,22.4,22.1,22.8];
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function fmt(n){return Math.round(n).toLocaleString();}
+function fmtM(n){return n>=1000000?'KES '+(n/1000000).toFixed(1)+'M':'KES '+(n/1000).toFixed(0)+'K';}
+
+// ═══ SIDEBAR TOGGLE ═══
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ═══ NAV ═══
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  closeSidebar();
+  const r={sales:renderSales,stores:renderStores,inventory:renderInventory,executive:renderExecutive,customers:renderCustomers};
+  if(r[name])r[name]();
+}
+
+// ═══════════════════════════════
+//  SVG BAR CHART HELPERS
+// ═══════════════════════════════
+
+/**
+ * Vertical bar chart — returns full SVG string
+ * @param {number[]} values
+ * @param {string[]} labels
+ * @param {string|string[]} colors - single color or array
+ * @param {object} opts
+ */
+function svgBarChart(values, labels, colors, opts={}){
+  const W=600, H=opts.h||160;
+  const padL=opts.padL||10, padR=10, padT=24, padB=opts.padB||28;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const n=values.length;
+  const gap=opts.gap||4;
+  const barW=Math.max(2, (plotW - gap*(n-1))/n);
+  const mx=Math.max(...values)||1;
+  const colorArr=Array.isArray(colors)?colors:values.map((_,i)=>{
+    if(typeof colors==='function') return colors(i,values[i]);
+    return colors;
+  });
+
+  let bars='', lbls='', vals='';
+  values.forEach((v,i)=>{
+    const x=padL+i*(barW+gap);
+    const bh=Math.max(2, (v/mx)*plotH);
+    const y=padT+plotH-bh;
+    const c=Array.isArray(colorArr)?colorArr[i]:(typeof colorArr==='function'?colorArr(i,v):colorArr);
+    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${c}" opacity="${opts.opacity||1}"/>`;
+    if(labels&&labels[i]){
+      lbls+=`<text x="${(x+barW/2).toFixed(1)}" y="${(H-2).toFixed(1)}" text-anchor="middle" font-size="9" fill="#7a7a72" font-family="'Fira Code',monospace">${labels[i]}</text>`;
+    }
+    if(opts.showVals&&v>0){
+      const vLabel=opts.valFmt?opts.valFmt(v):v;
+      vals+=`<text x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="8" fill="#2a2a26" font-family="'Fira Code',monospace">${vLabel}</text>`;
+    }
+  });
+
+  // Y-axis gridlines (3 lines)
+  let grid='';
+  [0.25,0.5,0.75,1].forEach(pct=>{
+    const gy=(padT+plotH*(1-pct)).toFixed(1);
+    grid+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#eceae4" stroke-width="1"/>`;
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">${grid}${bars}${vals}${lbls}</svg>`;
+}
+
+/**
+ * Horizontal bar chart — returns HTML string
+ */
+function hBarChart(rows){
+  // rows: [{label, value, maxVal, color, valText}]
+  return rows.map(r=>`
+    <div class="h-bar-row">
+      <div class="h-bar-label" title="${r.label}">${r.label}</div>
+      <div class="h-bar-track"><div class="h-bar-fill" style="width:${Math.round((r.value/r.maxVal)*100)}%;background:${r.color};"></div></div>
+      <div class="h-bar-val" style="color:${r.color};">${r.valText||r.value}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════
+//  SALES
+// ═══════════════════════════════
+function renderSales(){
+  const totalRev=stores.reduce((s,x)=>s+x.rev,0);
+  const avgMargin=(stores.reduce((s,x)=>s+x.margin,0)/stores.length).toFixed(1);
+  const totalTrans=stores.reduce((s,x)=>s+x.transactions,0);
+  document.getElementById('sales-stats').innerHTML=[
+    {lbl:'Total Revenue (MTD)',val:'KES '+fmt(totalRev),chg:'↑ 18.2% vs LM',up:true,bar:'#16a34a',icon:'💰'},
+    {lbl:'Avg Gross Margin',val:avgMargin+'%',chg:'↑ 1.4pp vs LM',up:true,bar:'#2563eb',icon:'📊'},
+    {lbl:'Total Transactions',val:fmt(totalTrans),chg:'↑ 14.6% vs LM',up:true,bar:'#d97706',icon:'🛒'},
+    {lbl:'Avg Basket Size',val:'KES 842',chg:'↑ 3.2% vs LM',up:true,bar:'#8b5cf6',icon:'🧺'},
+  ].map(s=>`<div class="stat"><div class="stat-icon">${s.icon}</div><div class="stat-lbl">${s.lbl}</div><div class="stat-val">${s.val}</div><div class="stat-chg ${s.up?'up':'dn'}">${s.chg}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar}33,transparent);"></div></div>`).join('');
+
+  // Daily revenue SVG bar chart
+  const daily=[2.1,2.4,2.2,2.8,3.1,2.9,3.4,2.6,2.8,3.2,3.5,3.3,3.8,3.6,4.0,3.8,4.2,4.0,4.4,4.2,4.6,4.4,4.8,4.6,5.0,4.8,5.2,5.0,5.4,5.2];
+  const dailyColors=daily.map((_,i)=>i>=27?'#111210':i>=24?'#374151':'#d1d5db');
+  const dailyLabels=daily.map((_,i)=>i%5===0?String(i+1):'');
+  document.getElementById('daily-rev-chart').innerHTML=svgBarChart(daily, dailyLabels, dailyColors, {h:160,gap:3,padB:22});
+
+  // Category horizontal bars
+  const cats=[{n:'Grains',v:28,c:'#d97706'},{n:'Dairy',v:22,c:'#2563eb'},{n:'Beverages',v:18,c:'#16a34a'},{n:'Personal Care',v:14,c:'#8b5cf6'},{n:'Cleaning',v:10,c:'#06b6d4'},{n:'Bakery',v:8,c:'#ef4444'}];
+  document.getElementById('cat-rev-chart').innerHTML=hBarChart(cats.map(c=>({label:c.n,value:c.v,maxVal:Math.max(...cats.map(x=>x.v)),color:c.c,valText:c.v+'%'})));
+
+  // Products table
+  document.getElementById('product-table').innerHTML=products.map((p,i)=>`<tr>
+    <td><strong>${p.name}</strong></td>
+    <td><span class="badge b-gray">${p.cat}</span></td>
+    <td class="num">${fmt(p.units)}</td>
+    <td class="num"><strong>${fmtM(p.rev)}</strong></td>
+    <td class="num ${p.margin>=25?'up':''}">${p.margin}%</td>
+    <td><span class="badge ${p.vsLast>=15?'b-green':p.vsLast>=8?'b-amber':'b-gray'}">↑ ${p.vsLast}%</span></td>
+    <td><div class="spark">${p.spark.map((v,j)=>`<div class="spark-bar" style="height:${Math.round((v/Math.max(...p.spark))*26)}px;background:${j===p.spark.length-1?'#111210':'#d1d5db'};"></div>`).join('')}</div></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════
+//  STORES
+// ═══════════════════════════════
+function renderStores(){
+  const metric=document.getElementById('store-metric')?.value||'revenue';
+  const sorted=[...stores].sort((a,b)=>b[metric]-a[metric]);
+  const totalRev=stores.reduce((s,x)=>s+x.rev,0);
+  const healthy=stores.filter(s=>s.status==='healthy').length;
+  document.getElementById('store-stats').innerHTML=[
+    {lbl:'Best Performing Store',val:sorted[0].name.split(' ').slice(1).join(' '),chg:'KES '+fmt(sorted[0].rev),up:true,bar:'#16a34a'},
+    {lbl:'Total Chain Revenue',val:fmtM(totalRev),chg:'↑ 18.2% vs last month',up:true,bar:'#2563eb'},
+    {lbl:'Healthy Stores',val:healthy+'/'+stores.length,chg:(stores.length-healthy)+' need attention',up:null,bar:'#d97706'},
+    {lbl:'Fastest Growing',val:[...stores].sort((a,b)=>b.growth-a.growth)[0].city,chg:'↑ '+[...stores].sort((a,b)=>b.growth-a.growth)[0].growth+'% MoM',up:true,bar:'#8b5cf6'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="font-size:16px;margin-top:2px;">${s.val}</div><div class="stat-chg ${s.up?'up':s.up===false?'dn':'muted'}">${s.chg}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar}33,transparent);"></div></div>`).join('');
+
+  document.getElementById('store-table').innerHTML=sorted.map((s,i)=>`<tr>
+    <td style="font-weight:800;color:${i===0?'#d97706':i===1?'#6b7280':i===2?'#92400e':'var(--muted)'};">#${i+1}</td>
+    <td><strong>${s.name.replace('Savannah ','')}</strong></td>
+    <td style="color:var(--muted);">${s.city}</td>
+    <td class="num">${fmtM(s.rev)}</td>
+    <td class="num ${s.margin>=22?'up':''}">${s.margin}%</td>
+    <td><span class="badge ${s.growth>=20?'b-green':s.growth>=10?'b-amber':'b-gray'}">↑ ${s.growth}%</span></td>
+    <td><span class="badge ${s.status==='healthy'?'b-green':s.status==='watch'?'b-amber':'b-red'}">${s.status}</span></td>
+  </tr>`).join('');
+
+  // Region horizontal bars
+  const regions=['Nairobi','Coast','Uganda','Rift Valley','Nyanza','Nairobi Metro','Mount Kenya'];
+  const regRev=regions.map(r=>({r,v:stores.filter(s=>s.region===r).reduce((sum,s)=>sum+s.rev,0)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const regColors=['#111210','#374151','#6b7280','#9ca3af','#d1d5db','#e5e7eb'];
+  const maxReg=Math.max(...regRev.map(x=>x.v));
+  document.getElementById('region-chart').innerHTML=hBarChart(regRev.map((r,i)=>({label:r.r,value:r.v,maxVal:maxReg,color:regColors[i],valText:fmtM(r.v)})));
+
+  document.getElementById('store-health').innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      ${[['Healthy',stores.filter(s=>s.status==='healthy').length,'var(--green)'],['Watch',stores.filter(s=>s.status==='watch').length,'var(--amber)'],['Low',stores.filter(s=>s.status==='low').length,'var(--red)']].map(([l,v,c])=>`
+      <div style="flex:1;min-width:70px;text-align:center;background:var(--s2);border-radius:8px;padding:10px 6px;">
+        <div style="font-size:22px;font-weight:800;color:${c};">${v}</div>
+        <div style="font-size:11px;color:var(--muted);">${l}</div>
+      </div>`).join('')}
+    </div>
+    ${stores.filter(s=>s.status!=='healthy').map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div class="tl ${s.status==='watch'?'tl-amber':'tl-red'}"></div>
+      <div style="flex:1;font-size:12px;">${s.name.replace('Savannah ','')}</div>
+      <span class="badge ${s.status==='watch'?'b-amber':'b-red'}">${s.status}</span>
+    </div>`).join('')}`;
+
+  // Store revenue SVG bar chart
+  const topStores=sorted.slice(0,10);
+  const storeColors=topStores.map(s=>s.status==='healthy'?'#16a34a':s.status==='watch'?'#d97706':'#dc2626');
+  const storeLabels=topStores.map(s=>s.name.replace('Savannah ','').split(' ')[0]);
+  document.getElementById('store-bar-chart').innerHTML=svgBarChart(
+    topStores.map(s=>s.rev/1000000),
+    storeLabels,
+    storeColors,
+    {h:180,padB:32,showVals:true,valFmt:v=>v.toFixed(1)+'M'}
+  );
+}
+
+// ═══════════════════════════════
+//  INVENTORY
+// ═══════════════════════════════
+function renderInventory(){
+  const urgent=skuInventory.filter(s=>s.days<=5);
+  const low=skuInventory.filter(s=>s.days>5&&s.days<=14);
+  const ok=skuInventory.filter(s=>s.days>14);
+  document.getElementById('inv-stats').innerHTML=[
+    {lbl:'Total SKUs Tracked',val:'847',chg:'Across 14 stores',up:null,bar:'#2563eb'},
+    {lbl:'Stockout Risk (≤5 days)',val:urgent.length,chg:'Urgent reorder needed',up:false,bar:'#dc2626'},
+    {lbl:'Low Stock (6–14 days)',val:low.length,chg:'Monitor closely',up:null,bar:'#d97706'},
+    {lbl:'Adequate Stock',val:ok.length,chg:'No action needed',up:true,bar:'#16a34a'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="color:${s.bar};">${s.val}</div><div class="stat-chg ${s.up?'up':s.up===false?'dn':'muted'}">${s.chg}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar}33,transparent);"></div></div>`).join('');
+
+  // Stock levels SVG bar chart
+  const cats=[{n:'Dairy',pct:68,c:'#2563eb'},{n:'Beverages',pct:42,c:'#16a34a'},{n:'Grains',pct:85,c:'#d97706'},{n:'Personal Care',pct:74,c:'#8b5cf6'},{n:'Cleaning',pct:91,c:'#06b6d4'},{n:'Bakery',pct:56,c:'#ef4444'}];
+  document.getElementById('stock-chart').innerHTML=svgBarChart(
+    cats.map(c=>c.pct),
+    cats.map(c=>c.n),
+    cats.map(c=>c.pct>=70?'#16a34a':c.pct>=50?'#d97706':'#dc2626'),
+    {h:160,padB:32,showVals:true,valFmt:v=>v+'%'}
+  );
+
+  document.getElementById('stockout-count').textContent=urgent.length+' urgent';
+  document.getElementById('stockout-list').innerHTML=urgent.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-size:12px;font-weight:600;">${s.name.split(' ').slice(0,4).join(' ')}</div><div style="font-size:10px;color:var(--muted);">${s.id} · ${s.cat}</div></div>
+      <div style="text-align:right;"><span class="badge b-red">${s.days}d cover</span><div style="font-size:10px;color:var(--muted);margin-top:2px;">Stock: ${fmt(s.stock)}</div></div>
+    </div>`).join('');
+
+  document.getElementById('inv-table').innerHTML=skuInventory.map(s=>{
+    const pct=Math.round((s.stock/s.reorder)*100);
+    const statusBadge=s.days<=5?'b-red':s.days<=14?'b-amber':'b-green';
+    const statusLabel=s.days<=5?'Critical':s.days<=14?'Low':'OK';
+    return `<tr>
+      <td class="muted" style="font-family:var(--mono);font-size:11px;">${s.id}</td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="badge b-gray">${s.cat}</span></td>
+      <td class="num">${fmt(s.stock)}</td>
+      <td class="num muted">${fmt(s.reorder)}</td>
+      <td class="num ${s.days<=5?'dn':s.days<=14?'':'up'}">${s.days} days</td>
+      <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+      <td>${s.days<=14?`<button style="padding:3px 10px;background:var(--ink);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--font);">Order Now</button>`:'<span style="color:var(--muted);font-size:11px;">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════
+//  EXECUTIVE
+// ═══════════════════════════════
+function renderExecutive(){
+  document.getElementById('exec-kpis').innerHTML=[
+    {lbl:'Annual Revenue Run-rate',val:'KES 3.6B',chg:'↑ 18.2% YoY',up:true,c:'#16a34a'},
+    {lbl:'Gross Margin',val:'22.1%',chg:'↑ 1.4pp YoY',up:true,c:'#2563eb'},
+    {lbl:'EBITDA Margin',val:'8.4%',chg:'↑ 0.8pp YoY',up:true,c:'#8b5cf6'},
+    {lbl:'Stores',val:'14',chg:'2 new in FY25',up:true,c:'#d97706'},
+    {lbl:'Daily Transactions',val:'78,400',chg:'↑ 14.6% YoY',up:true,c:'#06b6d4'},
+    {lbl:'Avg Basket Size',val:'KES 842',chg:'↑ 3.2% YoY',up:true,c:'#ef4444'},
+  ].map(k=>`<div class="kpi-card"><div class="kpi-val" style="color:${k.c};">${k.val}</div><div class="kpi-lbl">${k.lbl}</div><div class="kpi-chg ${k.up?'up':'dn'}">${k.chg}</div></div>`).join('');
+
+  // Monthly revenue SVG bar chart
+  const revColors=monthlyRev.map((_,i)=>i>=9?'#111210':i>=6?'#374151':'#d1d5db');
+  document.getElementById('exec-rev-chart').innerHTML=svgBarChart(monthlyRev, months, revColors, {h:160,showVals:true,valFmt:v=>v+'B'});
+
+  // Gross margin SVG bar chart
+  const minM=Math.min(...monthlyMargin);
+  const margColors=monthlyMargin.map((_,i)=>i>=9?'#16a34a':i>=6?'#4ade80':'#bbf7d0');
+  document.getElementById('exec-margin-chart').innerHTML=svgBarChart(monthlyMargin.map(v=>v-minM+0.5), months, margColors, {h:160});
+
+  const scorecard=[
+    {kpi:'Revenue Growth (YoY)',target:'15%',actual:'18.2%',ok:true,trend:'↑'},
+    {kpi:'Gross Margin',target:'21%',actual:'22.1%',ok:true,trend:'↑'},
+    {kpi:'EBITDA Margin',target:'8%',actual:'8.4%',ok:true,trend:'↑'},
+    {kpi:'Stockout Rate',target:'<3%',actual:'4.1%',ok:false,trend:'↗'},
+    {kpi:'Customer Retention',target:'68%',actual:'71.4%',ok:true,trend:'↑'},
+    {kpi:'New Store ROCE',target:'>18%',actual:'21.3%',ok:true,trend:'↑'},
+    {kpi:'Shrinkage Rate',target:'<1.5%',actual:'1.8%',ok:false,trend:'→'},
+  ];
+  document.getElementById('kpi-scorecard').innerHTML=scorecard.map(k=>`<tr>
+    <td><strong>${k.kpi}</strong></td>
+    <td class="num muted">${k.target}</td>
+    <td class="num ${k.ok?'up':'dn'}">${k.actual}</td>
+    <td>${k.ok?`<span class="badge b-green">✓ On Track</span>`:`<span class="badge b-red">✗ Off Target</span>`}</td>
+    <td style="font-size:16px;">${k.trend}</td>
+  </tr>`).join('');
+
+  const mix=[{n:'Nairobi Stores',v:48,c:'#111210'},{n:'Uganda Stores',v:22,c:'#374151'},{n:'Coast Stores',v:18,c:'#6b7280'},{n:'Other Kenya',v:12,c:'#9ca3af'}];
+  document.getElementById('revenue-mix').innerHTML=mix.map(m=>`
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:${m.c};flex-shrink:0;"></div>${m.n}</div>
+        <span style="font-weight:700;">${m.v}%</span>
+      </div>
+      <div class="prog-track" style="height:10px;"><div class="prog-fill" style="width:${m.v}%;background:${m.c};"></div></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════
+//  CUSTOMERS
+// ═══════════════════════════════
+function renderCustomers(){
+  document.getElementById('cust-stats').innerHTML=[
+    {lbl:'Active Customers (MTD)',val:'284,400',chg:'↑ 12.8% vs LM',up:true,bar:'#2563eb'},
+    {lbl:'Loyalty Members',val:'68,200',chg:'24% of active base',up:true,bar:'#16a34a'},
+    {lbl:'Avg Basket Size',val:'KES 842',chg:'↑ 3.2% vs LM',up:true,bar:'#d97706'},
+    {lbl:'Repeat Visit Rate',val:'71.4%',chg:'↑ 2.1pp vs LM',up:true,bar:'#8b5cf6'},
+  ].map(s=>`<div class="stat"><div class="stat-lbl">${s.lbl}</div><div class="stat-val" style="font-size:20px;">${s.val}</div><div class="stat-chg up">${s.chg}</div><div class="stat-bar" style="background:linear-gradient(90deg,${s.bar}33,transparent);"></div></div>`).join('');
+
+  const segs=[
+    {name:'Champions',desc:'High spend, high frequency',pct:14,count:'39,800',c:'#16a34a'},
+    {name:'Loyal Customers',desc:'Regular shoppers, good basket',pct:22,count:'62,600',c:'#2563eb'},
+    {name:'Potential Loyalists',desc:'Recent, decent frequency',pct:18,count:'51,200',c:'#8b5cf6'},
+    {name:'At Risk',desc:'Was frequent, now declining',pct:12,count:'34,100',c:'#d97706'},
+    {name:'Hibernating',desc:'Haven\'t shopped in 60+ days',pct:19,count:'54,000',c:'#9ca3af'},
+    {name:'New Customers',desc:'First purchase in last 30 days',pct:15,count:'42,700',c:'#06b6d4'},
+  ];
+  document.getElementById('cust-segments').innerHTML=segs.map(s=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${s.c};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;">${s.name}<span style="color:var(--muted);font-weight:400;">${s.count}</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">${s.desc}</div>
+        <div class="prog-track"><div class="prog-fill" style="width:${s.pct*4}%;background:${s.c};"></div></div>
+      </div>
+      <div style="font-size:11px;font-family:var(--mono);font-weight:600;color:${s.c};width:28px;text-align:right;">${s.pct}%</div>
+    </div>`).join('');
+
+  document.getElementById('basket-combos').innerHTML=[
+    {combo:'Milk + Bread + Eggs',lift:'3.2x',freq:'18,400 baskets'},
+    {combo:'Rice + Cooking Oil + Tomatoes',lift:'2.8x',freq:'14,200 baskets'},
+    {combo:'Noodles + Eggs + Sauce',lift:'2.6x',freq:'11,800 baskets'},
+    {combo:'Toothpaste + Soap + Lotion',lift:'2.4x',freq:'9,600 baskets'},
+    {combo:'Beer + Crisps + Soda',lift:'2.2x',freq:'8,400 baskets'},
+    {combo:'Flour + Sugar + Cooking Oil',lift:'2.1x',freq:'7,800 baskets'},
+  ].map(b=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-size:12px;font-weight:500;">${b.combo}</div><div style="font-size:10px;color:var(--muted);">${b.freq}</div></div>
+      <span class="badge b-green">Lift ${b.lift}</span>
+    </div>`).join('');
+
+  // Customer segment bar chart
+  const segCounts=segs.map(s=>parseInt(s.count.replace(',','')));
+  document.getElementById('cust-bar-chart').innerHTML=svgBarChart(
+    segCounts,
+    segs.map(s=>s.name.split(' ')[0]),
+    segs.map(s=>s.c),
+    {h:160,padB:32,showVals:true,valFmt:v=>(v/1000).toFixed(0)+'k'}
+  );
+
+  document.getElementById('clv-table').innerHTML=[
+    {seg:'Champions',count:'39,800',basket:'KES 1,840',visits:'8.2',clv:'KES 18,100',loyalty:'★★★★★',retention:'94%'},
+    {seg:'Loyal Customers',count:'62,600',basket:'KES 1,240',visits:'5.8',clv:'KES 8,640',loyalty:'★★★★',retention:'82%'},
+    {seg:'Potential Loyalists',count:'51,200',basket:'KES 920',visits:'3.4',clv:'KES 3,760',loyalty:'★★★',retention:'68%'},
+    {seg:'At Risk',count:'34,100',basket:'KES 880',visits:'1.2',clv:'KES 1,270',loyalty:'★★',retention:'31%'},
+    {seg:'Hibernating',count:'54,000',basket:'KES 640',visits:'0.3',clv:'KES 230',loyalty:'★',retention:'12%'},
+    {seg:'New Customers',count:'42,700',basket:'KES 760',visits:'1.0',clv:'KES 914',loyalty:'—',retention:'48%'},
+  ].map(r=>`<tr>
+    <td><strong>${r.seg}</strong></td>
+    <td class="num">${r.count}</td>
+    <td class="num">${r.basket}</td>
+    <td class="num">${r.visits}</td>
+    <td class="num"><strong>${r.clv}</strong></td>
+    <td style="color:var(--amber);">${r.loyalty}</td>
+    <td><span class="badge ${parseInt(r.retention)>=70?'b-green':parseInt(r.retention)>=40?'b-amber':'b-red'}">${r.retention}</span></td>
+  </tr>`).join('');
+}
+
+// ═══ INIT ═══
+renderSales();
+</script>
+</body>
+</html>

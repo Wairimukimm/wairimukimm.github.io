@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OvertimeIQ — Factory Workforce Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f1117;--surface:#181c25;--surface2:#1e2330;--surface3:#252b3b;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#f5a623;--accent2:#e8891a;--green:#2dd98f;--red:#ff5c5c;
+  --blue:#4d9fff;--purple:#a78bfa;--teal:#2dd4bf;
+  --text:#f0f2f7;--muted:#7a8099;--muted2:#545970;
+  --font:'Sora',sans-serif;--mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:224px;min-width:224px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.logo{padding:20px 18px 14px;border-bottom:1px solid var(--border);}
+.logo-title{font-size:15px;font-weight:600;color:var(--accent);letter-spacing:-0.3px;}
+.logo-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.role-badge{margin:12px 14px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.role-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.role-name{font-size:12px;font-weight:500;}
+.role-title{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.nav{flex:1;padding:8px 0;overflow-y:auto;}
+.nav-section{padding:14px 18px 6px;font-size:10px;color:var(--muted2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;color:var(--muted);font-size:13px;transition:all 0.15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);background:rgba(245,166,35,0.08);border-left-color:var(--accent);}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.page{display:none;}.page.active{display:block;}
+.page-header{padding:24px 28px 0;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;transition:all 0.15s;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.btn-ghost:hover{background:var(--surface3);}
+.btn-danger{background:rgba(255,92,92,0.15);color:var(--red);border:1px solid rgba(255,92,92,0.3);}
+.btn-danger:hover{background:rgba(255,92,92,0.25);}
+.btn-success{background:rgba(45,217,143,0.15);color:var(--green);border:1px solid rgba(45,217,143,0.3);}
+.btn-success:hover{background:rgba(45,217,143,0.25);}
+.btn-info{background:rgba(77,159,255,0.15);color:var(--blue);border:1px solid rgba(77,159,255,0.3);}
+.btn-info:hover{background:rgba(77,159,255,0.25);}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.btn-xs{padding:3px 9px;font-size:11px;border-radius:6px;}
+.cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;padding:20px 28px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;opacity:0.06;transform:translate(20px,-20px);}
+.stat-card.orange::before{background:var(--accent);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.red::before{background:var(--red);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.purple::before{background:var(--purple);}
+.stat-label{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.stat-value{font-size:24px;font-weight:600;letter-spacing:-1px;}
+.stat-value.orange{color:var(--accent);}
+.stat-value.green{color:var(--green);}
+.stat-value.red{color:var(--red);}
+.stat-value.blue{color:var(--blue);}
+.stat-value.purple{color:var(--purple);}
+.stat-meta{font-size:11px;color:var(--muted);margin-top:6px;}
+.section{padding:0 28px 24px;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.section-title{font-size:15px;font-weight:500;}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:auto;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface2);}
+th{padding:10px 14px;text-align:left;font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;font-weight:400;white-space:nowrap;}
+td{padding:11px 14px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.empty-row td{text-align:center;color:var(--muted);padding:40px;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-green{background:rgba(45,217,143,0.12);color:var(--green);}
+.badge-red{background:rgba(255,92,92,0.12);color:var(--red);}
+.badge-orange{background:rgba(245,166,35,0.12);color:var(--accent);}
+.badge-blue{background:rgba(77,159,255,0.12);color:var(--blue);}
+.badge-purple{background:rgba(167,139,250,0.12);color:var(--purple);}
+.badge-teal{background:rgba(45,212,191,0.12);color:var(--teal);}
+.badge-gray{background:var(--surface3);color:var(--muted);}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px 22px;}
+.modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-family:var(--mono);}
+.form-row input,.form-row select,.form-row textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);}
+.form-row select option{background:var(--surface2);}
+.form-row textarea{resize:vertical;min-height:70px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.tabs{display:flex;gap:4px;background:var(--surface);border-radius:10px;padding:4px;width:fit-content;margin-bottom:16px;}
+.tab{padding:7px 16px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted);transition:all 0.15s;}
+.tab.active{background:var(--surface3);color:var(--text);font-weight:500;}
+.clock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.clock-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;transition:border-color 0.2s;}
+.clock-card.clocked-in{border-color:rgba(45,217,143,0.35);background:rgba(45,217,143,0.03);}
+.clock-emp-name{font-size:13px;font-weight:500;margin-bottom:2px;}
+.clock-dept{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;}
+.clock-time{font-size:22px;font-weight:600;font-family:var(--mono);color:var(--accent);margin-bottom:6px;}
+.clock-status{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.clock-status.in{color:var(--green);}
+.report-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px;}
+.dept-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.dept-header{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.dept-name{font-size:14px;font-weight:500;}
+.role-switcher{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;z-index:50;min-width:220px;}
+.role-switcher-title{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;}
+.role-btn{display:block;width:100%;text-align:left;padding:7px 10px;border-radius:7px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:var(--font);font-size:12px;transition:all 0.15s;margin-bottom:2px;}
+.role-btn:hover{background:var(--surface2);color:var(--text);}
+.role-btn.active{background:rgba(245,166,35,0.12);color:var(--accent);}
+.input-search{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
+.input-search:focus{border-color:var(--accent);}
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.text-muted{color:var(--muted);}.text-green{color:var(--green);}.text-red{color:var(--red);}.text-orange{color:var(--accent);}
+.mono{font-family:var(--mono);}
+.paid-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:11px;}
+.paid-full{background:rgba(45,217,143,0.12);color:var(--green);}
+.paid-partial{background:rgba(245,166,35,0.12);color:var(--accent);}
+.paid-none{background:rgba(255,92,92,0.12);color:var(--red);}
+.bar-track{background:var(--surface3);border-radius:4px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.4s;}
+.info-box{background:rgba(77,159,255,0.07);border:1px solid rgba(77,159,255,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;}
+.warning-box{background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:14px;}
+.ot-reason-tag{display:inline-block;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--muted);margin-top:4px;}
+@media print{.sidebar,.role-switcher,.header-actions button,.btn-ghost,.btn-primary{display:none!important;}.main{overflow:visible;}.page{display:block!important;}}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-title">OvertimeIQ</div>
+    <div class="logo-sub">Factory Workforce System</div>
+  </div>
+  <div class="role-badge" onclick="toggleRoleSwitcher()">
+    <div class="role-dot"></div>
+    <div><div class="role-name" id="sidebar-role-name">HR Admin</div><div class="role-title" id="sidebar-role-title">Full Access</div></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="nav-icon">▦</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('clock')" data-page="clock"><span class="nav-icon">⏱</span> Clock In / Out</div>
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="showPage('employees')" data-page="employees"><span class="nav-icon">👥</span> Employees</div>
+    <div class="nav-item" onclick="showPage('departments')" data-page="departments"><span class="nav-icon">🏭</span> Departments</div>
+    <div class="nav-item" onclick="showPage('otpayments')" data-page="otpayments"><span class="nav-icon">💳</span> OT Payments</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="showPage('daily')" data-page="daily"><span class="nav-icon">📋</span> Daily Report</div>
+    <div class="nav-item" onclick="showPage('weekly')" data-page="weekly"><span class="nav-icon">📊</span> Weekly Summary</div>
+    <div class="nav-item" onclick="showPage('monthly')" data-page="monthly"><span class="nav-icon">📅</span> Monthly Report</div>
+    <div class="nav-item" onclick="showPage('yearly')" data-page="yearly"><span class="nav-icon">📈</span> Yearly Report</div>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main-content">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div><div class="page-title">Good morning 👋</div><div class="page-sub" id="dash-date"></div></div>
+    <div class="header-actions"><span id="live-clock" style="font-family:var(--mono);font-size:15px;color:var(--accent);"></span></div>
+  </div>
+  <div class="cards-row" id="stat-cards"></div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">⚡ Overtime Flags — Today</div><span class="badge badge-orange" id="ot-flag-count">0</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Department</th><th>In</th><th>Hours</th><th>OT Hrs</th><th>Est. Cost</th><th>Payment</th><th>Status</th></tr></thead>
+      <tbody id="ot-flags-table"></tbody>
+    </table></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><div class="section-title">🟢 Active Workers Now</div><span class="badge badge-green" id="active-count">0</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Department</th><th>Sub-Dept</th><th>Clocked In</th><th>Hours So Far</th></tr></thead>
+      <tbody id="active-table"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- CLOCK -->
+<div class="page" id="page-clock">
+  <div class="page-header">
+    <div><div class="page-title">Clock In / Out</div><div class="page-sub">Record shift attendance</div></div>
+    <div class="header-actions">
+      <input class="input-search" style="width:190px;" placeholder="Search employee..." id="clock-search" oninput="renderClockPage()">
+      <select class="input-search" style="width:160px;" id="clock-dept-filter" onchange="renderClockPage()"><option value="">All Departments</option></select>
+    </div>
+  </div>
+  <div class="section" style="padding-top:20px;"><div class="clock-grid" id="clock-grid"></div></div>
+</div>
+
+<!-- EMPLOYEES -->
+<div class="page" id="page-employees">
+  <div class="page-header">
+    <div><div class="page-title">Employees</div><div class="page-sub">Manage your workforce</div></div>
+    <div class="header-actions">
+      <input class="input-search" style="width:180px;" placeholder="Search..." id="emp-search" oninput="renderEmployees()">
+      <select class="input-search" style="width:160px;" id="emp-dept-filter" onchange="renderEmployees()"><option value="">All Departments</option></select>
+      <button class="btn btn-primary" id="add-emp-btn" onclick="openAddEmployee()">+ Add Employee</button>
+    </div>
+  </div>
+  <div class="section" style="padding-top:20px;">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>ID</th><th>Department</th><th>Sub-Dept</th><th>Title</th><th>Wage/hr</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="emp-table"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- DEPARTMENTS -->
+<div class="page" id="page-departments">
+  <div class="page-header">
+    <div><div class="page-title">Departments</div><div class="page-sub">Structure your factory</div></div>
+    <div class="header-actions"><button class="btn btn-primary" id="add-dept-btn" onclick="openAddDept()">+ Add Department</button></div>
+  </div>
+  <div class="section" style="padding-top:20px;" id="dept-list"></div>
+</div>
+
+<!-- OT PAYMENTS -->
+<div class="page" id="page-otpayments">
+  <div class="page-header">
+    <div><div class="page-title">OT Payments</div><div class="page-sub">Log and track overtime payments made</div></div>
+    <div class="header-actions">
+      <select class="input-search" style="width:160px;" id="otp-dept-filter" onchange="renderOTPayments()"><option value="">All Departments</option></select>
+      <select class="input-search" style="width:130px;" id="otp-status-filter" onchange="renderOTPayments()">
+        <option value="">All Status</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="unpaid">Unpaid</option>
+      </select>
+      <button class="btn btn-primary" id="add-otp-btn" onclick="openOTPaymentModal()">+ Log Payment</button>
+    </div>
+  </div>
+  <div class="cards-row" id="otp-summary-cards" style="padding-top:20px;"></div>
+  <div class="section">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Date</th><th>OT Hours</th><th>OT Reason</th><th>Amount Due</th><th>Amount Paid</th><th>Payment Status</th><th>Paid On</th><th>Actions</th></tr></thead>
+      <tbody id="otp-table"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- DAILY -->
+<div class="page" id="page-daily">
+  <div class="page-header">
+    <div><div class="page-title">Daily Report</div><div class="page-sub">Overtime breakdown by department</div></div>
+    <div class="header-actions">
+      <input type="date" id="report-date-picker" class="input-search" style="width:160px;" onchange="renderDailyReport()">
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="section" style="padding-top:20px;" id="daily-report-content"></div>
+</div>
+
+<!-- WEEKLY -->
+<div class="page" id="page-weekly">
+  <div class="page-header">
+    <div><div class="page-title">Weekly Summary</div><div class="page-sub">7-day overtime cost overview</div></div>
+    <div class="header-actions"><button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button></div>
+  </div>
+  <div class="section" style="padding-top:20px;" id="weekly-content"></div>
+</div>
+
+<!-- MONTHLY -->
+<div class="page" id="page-monthly">
+  <div class="page-header">
+    <div><div class="page-title">Monthly Report</div><div class="page-sub">Full month overtime analysis</div></div>
+    <div class="header-actions">
+      <select class="input-search" style="width:130px;" id="month-select" onchange="renderMonthly()"></select>
+      <select class="input-search" style="width:100px;" id="month-year-select" onchange="renderMonthly()"></select>
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="section" style="padding-top:20px;" id="monthly-content"></div>
+</div>
+
+<!-- YEARLY -->
+<div class="page" id="page-yearly">
+  <div class="page-header">
+    <div><div class="page-title">Yearly Report</div><div class="page-sub">Annual overtime cost and trends</div></div>
+    <div class="header-actions">
+      <select class="input-search" style="width:110px;" id="year-select" onchange="renderYearly()"></select>
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="section" style="padding-top:20px;" id="yearly-content"></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ROLE SWITCHER -->
+<div class="role-switcher" id="role-switcher" style="display:none;">
+  <div class="role-switcher-title">SWITCH ROLE (DEMO)</div>
+  <button class="role-btn active" id="rb-hr" onclick="setRole('hr')">👤 HR Admin — Full Access</button>
+  <button class="role-btn" id="rb-manager" onclick="setRole('manager')">🏭 Dept Manager</button>
+  <button class="role-btn" id="rb-supervisor" onclick="setRole('supervisor')">⚙️ Supervisor — Clock Only</button>
+  <button class="role-btn" id="rb-ceo" onclick="setRole('ceo')">📊 CEO — Read Only</button>
+</div>
+
+<!-- MODAL: EMPLOYEE -->
+<div class="modal-overlay hidden" id="emp-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="emp-modal-title">Add Employee</div><button class="modal-close" onclick="closeModal('emp-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="emp-edit-id">
+      <div class="form-grid">
+        <div class="form-row"><label>Full Name *</label><input id="emp-name" placeholder="e.g. James Kamau"></div>
+        <div class="form-row"><label>Employee ID *</label><input id="emp-id-field" placeholder="e.g. EMP-045"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label>Department *</label><select id="emp-dept-select" onchange="populateSubDepts()"><option value="">Select...</option></select></div>
+        <div class="form-row"><label>Sub-Department</label><select id="emp-subdept-select"><option value="">Select...</option></select></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label>Job Title</label><input id="emp-role" placeholder="e.g. Machine Operator"></div>
+        <div class="form-row"><label>Basic Wage (KES/hr) *</label><input id="emp-wage" type="number" placeholder="e.g. 180"></div>
+      </div>
+      <div class="form-row"><label>Status</label><select id="emp-status"><option value="active">Active</option><option value="inactive">Inactive / Left</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('emp-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DEPARTMENT -->
+<div class="modal-overlay hidden" id="dept-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Department</div><button class="modal-close" onclick="closeModal('dept-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Department Name *</label><input id="dept-name-input" placeholder="e.g. Production"></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Sub-Departments</div>
+      <div id="subdept-inputs"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addSubDeptInput()" style="margin-top:6px;">+ Add Sub-Dept</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('dept-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDepartment()">Save Department</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CLOCK -->
+<div class="modal-overlay hidden" id="clock-modal">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header"><div class="modal-title" id="clock-modal-title">Clock In</div><button class="modal-close" onclick="closeModal('clock-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Employee</label><div style="font-size:13px;font-weight:500;" id="clock-modal-info">—</div></div>
+      <div class="form-row"><label>Time *</label><input type="time" id="clock-time-input"></div>
+      <div class="form-row" id="clock-ot-reason-row" style="display:none;">
+        <label>Reason for Overtime *</label>
+        <select id="clock-ot-reason-select" onchange="toggleCustomReason()">
+          <option value="">Select reason...</option>
+          <option value="Production backlog">Production backlog</option>
+          <option value="Machine breakdown recovery">Machine breakdown recovery</option>
+          <option value="Rush order / urgent delivery">Rush order / urgent delivery</option>
+          <option value="Staff shortage">Staff shortage</option>
+          <option value="Quality rework">Quality rework</option>
+          <option value="End-of-month targets">End-of-month targets</option>
+          <option value="Preventive maintenance">Preventive maintenance</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+      </div>
+      <div class="form-row" id="clock-ot-reason-custom" style="display:none;"><label>Specify Reason</label><input id="clock-ot-custom-input" placeholder="Describe the reason..."></div>
+      <div class="form-row"><label>Note (optional)</label><input id="clock-note" placeholder="Any additional notes..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clock-modal')">Cancel</button>
+      <button class="btn btn-primary" id="clock-confirm-btn" onclick="confirmClock()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OT PAYMENT -->
+<div class="modal-overlay hidden" id="otp-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="otp-modal-title">Log OT Payment</div><button class="modal-close" onclick="closeModal('otp-modal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="otp-edit-id">
+      <div class="form-grid">
+        <div class="form-row"><label>Employee *</label><select id="otp-emp-select" onchange="autoFillOTAmount()"><option value="">Select...</option></select></div>
+        <div class="form-row"><label>Date *</label><input type="date" id="otp-date"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label>OT Hours Worked</label><input type="number" id="otp-hours" step="0.5" placeholder="e.g. 2.5" oninput="autoCalcDue()"></div>
+        <div class="form-row"><label>Amount Due (KES)</label><input type="number" id="otp-due" placeholder="Auto-calculated"></div>
+      </div>
+      <div class="form-row">
+        <label>Reason for Overtime *</label>
+        <select id="otp-reason-select" onchange="toggleOTPCustomReason()">
+          <option value="">Select reason...</option>
+          <option value="Production backlog">Production backlog</option>
+          <option value="Machine breakdown recovery">Machine breakdown recovery</option>
+          <option value="Rush order / urgent delivery">Rush order / urgent delivery</option>
+          <option value="Staff shortage">Staff shortage</option>
+          <option value="Quality rework">Quality rework</option>
+          <option value="End-of-month targets">End-of-month targets</option>
+          <option value="Preventive maintenance">Preventive maintenance</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+      </div>
+      <div class="form-row" id="otp-reason-custom" style="display:none;"><label>Specify Reason</label><input id="otp-custom-reason" placeholder="Describe..."></div>
+      <div class="divider"></div>
+      <div class="form-grid">
+        <div class="form-row"><label>Amount Paid (KES)</label><input type="number" id="otp-paid" placeholder="e.g. 1200" oninput="updatePayStatus()"></div>
+        <div class="form-row"><label>Payment Status</label><select id="otp-status"><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Fully Paid</option></select></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label>Payment Date</label><input type="date" id="otp-paid-date"></div>
+        <div class="form-row"><label>Payment Method</label><select id="otp-method"><option value="">—</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option><option value="Cash">Cash</option><option value="Cheque">Cheque</option></select></div>
+      </div>
+      <div class="form-row"><label>Authorised By</label><input id="otp-auth" placeholder="e.g. Joseph Mwangi (Factory Manager)"></div>
+      <div class="form-row"><label>Notes</label><textarea id="otp-notes" placeholder="Any additional notes..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('otp-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOTPayment()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════ DATA ═══════════════════════
+let db = {
+  role:'hr',
+  departments:[
+    {id:'d1',name:'Production',subs:['Assembly Line A','Assembly Line B','Packaging','Finishing']},
+    {id:'d2',name:'Quality Control',subs:['Inspection','Lab Testing','Compliance']},
+    {id:'d3',name:'Maintenance',subs:['Electrical','Mechanical','Utilities']},
+    {id:'d4',name:'Warehouse',subs:['Receiving','Dispatch','Cold Storage']},
+    {id:'d5',name:'Administration',subs:['HR','Finance','Security']}
+  ],
+  employees:[
+    {id:'e1',name:'James Kamau',empId:'EMP-001',deptId:'d1',subDept:'Assembly Line A',role:'Machine Operator',wage:180,status:'active'},
+    {id:'e2',name:'Mary Wanjiku',empId:'EMP-002',deptId:'d1',subDept:'Assembly Line B',role:'Line Supervisor',wage:250,status:'active'},
+    {id:'e3',name:'Peter Odhiambo',empId:'EMP-003',deptId:'d1',subDept:'Packaging',role:'Packer',wage:160,status:'active'},
+    {id:'e4',name:'Grace Achieng',empId:'EMP-004',deptId:'d2',subDept:'Inspection',role:'QC Inspector',wage:220,status:'active'},
+    {id:'e5',name:'Samuel Mutua',empId:'EMP-005',deptId:'d2',subDept:'Lab Testing',role:'Lab Technician',wage:240,status:'active'},
+    {id:'e6',name:'Josephine Muthoni',empId:'EMP-006',deptId:'d3',subDept:'Electrical',role:'Electrician',wage:260,status:'active'},
+    {id:'e7',name:'David Otieno',empId:'EMP-007',deptId:'d3',subDept:'Mechanical',role:'Mechanic',wage:250,status:'active'},
+    {id:'e8',name:'Faith Chebet',empId:'EMP-008',deptId:'d4',subDept:'Receiving',role:'Store Clerk',wage:170,status:'active'},
+    {id:'e9',name:'Brian Njoroge',empId:'EMP-009',deptId:'d4',subDept:'Dispatch',role:'Forklift Operator',wage:200,status:'active'},
+    {id:'e10',name:'Alice Waweru',empId:'EMP-010',deptId:'d5',subDept:'HR',role:'HR Officer',wage:300,status:'active'},
+    {id:'e11',name:'Kevin Maina',empId:'EMP-011',deptId:'d1',subDept:'Finishing',role:'Finishing Operator',wage:175,status:'active'},
+    {id:'e12',name:'Susan Auma',empId:'EMP-012',deptId:'d2',subDept:'Compliance',role:'Compliance Officer',wage:290,status:'active'},
+  ],
+  attendance:{}, // {empId:{date:{in,out,otReason,note}}}
+  otPayments:[], // [{id,empId,date,hours,due,paid,status,reason,paidDate,method,auth,notes}]
+  nextEmpNum:13
+};
+
+// ─── SEED DATA ───
+function seedData(){
+  const today=todayStr();
+  const ins=['06:45','07:00','07:03','06:58','07:10','07:00','06:55','07:05','07:00','07:02','06:50','07:08'];
+  const outs=['15:30','17:20',null,'16:00','17:45','15:55','18:30',null,'16:10','15:50','17:00','16:30'];
+  const reasons=['Production backlog','Rush order / urgent delivery','','End-of-month targets','Rush order / urgent delivery','','Machine breakdown recovery','','','','Production backlog',''];
+  db.employees.forEach((e,i)=>{
+    db.attendance[e.id]={};
+    db.attendance[e.id][today]={in:ins[i]||'07:00',out:outs[i]||null,otReason:reasons[i]||'',note:''};
+    for(let d=1;d<=60;d++){
+      const date=pastDateStr(d);
+      const inT=`0${6+Math.floor(Math.random()*1)}:${Math.random()>0.5?'00':'30'}`;
+      const extraHrs=Math.random()>0.55?Math.floor(Math.random()*3)+1:0;
+      const outT=addHoursStr(inT,8+extraHrs);
+      const r=extraHrs>0?['Production backlog','Rush order / urgent delivery','Staff shortage','Quality rework','End-of-month targets'][Math.floor(Math.random()*5)]:'';
+      db.attendance[e.id][date]={in:inT,out:outT,otReason:r,note:''};
+    }
+  });
+  // Seed OT payments
+  const payReasons=['Production backlog','Rush order / urgent delivery','Machine breakdown recovery','End-of-month targets','Staff shortage'];
+  const methods=['M-Pesa','Bank Transfer','Cash'];
+  db.employees.slice(0,8).forEach((e,i)=>{
+    for(let m=0;m<3;m++){
+      const date=pastDateStr(5+m*10+i);
+      const hrs=1+Math.floor(Math.random()*3);
+      const due=Math.round(hrs*e.wage*1.5);
+      const paid=m===0?due:m===1?Math.round(due*0.5):0;
+      const status=m===0?'paid':m===1?'partial':'unpaid';
+      db.otPayments.push({
+        id:'otp'+Date.now()+i+m,empId:e.id,date,hours:hrs,due,paid,status,
+        reason:payReasons[Math.floor(Math.random()*5)],
+        paidDate:paid>0?pastDateStr(m*8+1):'',
+        method:paid>0?methods[Math.floor(Math.random()*3)]:'',
+        auth:'Joseph Mwangi (Factory Manager)',notes:''
+      });
+    }
+  });
+}
+
+// ─── DATE UTILS ───
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function pastDateStr(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().split('T')[0];}
+function addHoursStr(t,h){const[hr,mn]=t.split(':').map(Number);const tot=hr*60+mn+h*60;return `${String(Math.floor(tot/60)%24).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;}
+function timeToMins(t){if(!t)return 0;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function calcHours(inT,outT){if(!inT||!outT)return null;const d=(timeToMins(outT)-timeToMins(inT));return d>0?d/60:null;}
+function calcOT(hrs){return hrs>8?hrs-8:0;}
+function calcOTCost(otH,wage){return Math.round(otH*wage*1.5);}
+function fmt(n){return Math.round(n).toLocaleString();}
+function nowTimeStr(){const n=new Date();return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;}
+function getDept(id){return db.departments.find(d=>d.id===id);}
+function getEmp(id){return db.employees.find(e=>e.id===id);}
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ─── CLOCK ───
+function updateClock(){const el=document.getElementById('live-clock');if(el)el.textContent=new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function updateDashDate(){
+  const el=document.getElementById('dash-date');
+  if(el)el.textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const rp=document.getElementById('report-date-picker');if(rp&&!rp.value)rp.value=todayStr();
+  // Populate month/year selects
+  const ms=document.getElementById('month-select');
+  if(ms&&!ms.options.length){MONTHS.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m;if(i===new Date().getMonth())o.selected=true;ms.appendChild(o);});}
+  const mys=document.getElementById('month-year-select');
+  if(mys&&!mys.options.length){for(let y=new Date().getFullYear();y>=new Date().getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y;if(y===new Date().getFullYear())o.selected=true;mys.appendChild(o);}}
+  const ys=document.getElementById('year-select');
+  if(ys&&!ys.options.length){for(let y=new Date().getFullYear();y>=new Date().getFullYear()-4;y--){const o=document.createElement('option');o.value=y;o.textContent=y;if(y===new Date().getFullYear())o.selected=true;ys.appendChild(o);}}
+}
+
+// ─── NAVIGATION ───
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
+  const ni=document.querySelector(`[data-page="${name}"]`);if(ni)ni.classList.add('active');
+  const renders={dashboard:renderDashboard,clock:renderClockPage,employees:renderEmployees,departments:renderDepartments,otpayments:renderOTPayments,daily:renderDailyReport,weekly:renderWeekly,monthly:renderMonthly,yearly:renderYearly};
+  if(renders[name])renders[name]();
+}
+
+// ─── ROLES ───
+const rolePages={
+  hr:['dashboard','clock','employees','departments','otpayments','daily','weekly','monthly','yearly'],
+  manager:['dashboard','clock','employees','otpayments','daily','weekly','monthly','yearly'],
+  supervisor:['clock'],
+  ceo:['dashboard','daily','weekly','monthly','yearly']
+};
+const roleInfo={
+  hr:{name:'HR Admin',title:'Full Access',color:'var(--green)'},
+  manager:{name:'Dept Manager',title:'Department View',color:'var(--blue)'},
+  supervisor:{name:'Supervisor',title:'Clock In/Out Only',color:'var(--purple)'},
+  ceo:{name:'CEO',title:'Read Only',color:'var(--accent)'}
+};
+function setRole(r){
+  db.role=r;
+  const info=roleInfo[r];
+  document.getElementById('sidebar-role-name').textContent=info.name;
+  document.getElementById('sidebar-role-name').style.color=info.color;
+  document.getElementById('sidebar-role-title').textContent=info.title;
+  const allowed=rolePages[r];
+  document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
+    el.style.display=allowed.includes(el.getAttribute('data-page'))?'':'none';
+  });
+  // Restrict add buttons
+  const canEdit=['hr','manager'].includes(r);
+  ['add-emp-btn','add-dept-btn','add-otp-btn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=canEdit?'':'none';});
+  ['hr','manager','supervisor','ceo'].forEach(x=>{const b=document.getElementById('rb-'+x);if(b)b.classList.toggle('active',x===r);});
+  document.getElementById('role-switcher').style.display='none';
+  showPage(allowed[0]);
+}
+function toggleRoleSwitcher(){const rs=document.getElementById('role-switcher');rs.style.display=rs.style.display==='none'?'block':'none';}
+
+// ─── DASHBOARD ───
+function renderDashboard(){
+  const today=todayStr(),now=nowTimeStr();
+  const active=db.employees.filter(e=>{const a=db.attendance[e.id]?.[today];return a?.in&&!a?.out;});
+  const allToday=db.employees.filter(e=>db.attendance[e.id]?.[today]?.in);
+  let totalOT=0,totalCost=0,otFlags=[];
+  allToday.forEach(e=>{
+    const a=db.attendance[e.id][today];
+    const outT=a.out||now;
+    const hrs=calcHours(a.in,outT);
+    if(hrs&&hrs>8){const ot=calcOT(hrs);const cost=calcOTCost(ot,e.wage);totalOT+=ot;totalCost+=cost;otFlags.push({e,hrs,ot,cost,a});}
+  });
+  const unpaidTotal=db.otPayments.filter(p=>p.status!=='paid').reduce((s,p)=>s+(p.due-p.paid),0);
+  const statCards=[
+    {label:'🟢 Clocked In Now',val:active.length,cls:'green'},
+    {label:'⚡ OT Hours Today',val:totalOT.toFixed(1)+'h',cls:'orange'},
+    {label:'💰 Est. OT Cost Today',val:'KES '+fmt(totalCost),cls:'red'},
+    {label:'⚠️ Unpaid OT Balance',val:'KES '+fmt(unpaidTotal),cls:'purple'},
+    {label:'👷 Active Workforce',val:db.employees.filter(e=>e.status==='active').length,cls:'blue'},
+  ];
+  document.getElementById('stat-cards').innerHTML=statCards.map(c=>`<div class="stat-card ${c.cls}"><div class="stat-label">${c.label}</div><div class="stat-value ${c.cls}">${c.val}</div></div>`).join('');
+  document.getElementById('ot-flag-count').textContent=otFlags.length+' employees';
+  const tbl=document.getElementById('ot-flags-table');
+  if(!otFlags.length){tbl.innerHTML='<tr class="empty-row"><td colspan="8">No overtime recorded today</td></tr>';}
+  else{
+    tbl.innerHTML=otFlags.map(f=>{
+      const dept=getDept(f.e.deptId);
+      const pmts=db.otPayments.filter(p=>p.empId===f.e.id&&p.date===today);
+      const payStatus=pmts.length?pmts[0].status:'unpaid';
+      const paidPill=payStatus==='paid'?`<span class="paid-pill paid-full">✓ Paid</span>`:payStatus==='partial'?`<span class="paid-pill paid-partial">~ Partial</span>`:`<span class="paid-pill paid-none">Unpaid</span>`;
+      return `<tr>
+        <td><strong>${f.e.name}</strong><br><span class="text-muted mono" style="font-size:11px;">${f.e.empId}</span></td>
+        <td>${dept?.name||'—'}<br><span style="font-size:11px;color:var(--muted);">${f.e.subDept}</span></td>
+        <td class="mono">${f.a.in}</td><td class="mono">${f.hrs.toFixed(1)}h</td>
+        <td><span class="badge badge-orange">${f.ot.toFixed(1)}h</span></td>
+        <td class="text-red mono">KES ${fmt(f.cost)}</td>
+        <td>${paidPill}</td>
+        <td>${f.a.out?'<span class="badge badge-gray">Done</span>':'<span class="badge badge-green"><span class="dot"></span> Active</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('active-count').textContent=active.length+' clocked in';
+  const atbl=document.getElementById('active-table');
+  if(!active.length){atbl.innerHTML='<tr class="empty-row"><td colspan="5">No one currently clocked in</td></tr>';}
+  else{
+    const nowM=timeToMins(now);
+    atbl.innerHTML=active.map(e=>{
+      const a=db.attendance[e.id][today];
+      const hrs=((nowM-timeToMins(a.in))/60).toFixed(1);
+      const dept=getDept(e.deptId);
+      return `<tr><td><strong>${e.name}</strong></td><td>${dept?.name||'—'}</td><td>${e.subDept}</td><td class="mono">${a.in}</td><td class="mono">${hrs}h so far</td></tr>`;
+    }).join('');
+  }
+}
+
+// ─── CLOCK PAGE ───
+let pendingClock=null;
+function renderClockPage(){
+  populateDeptFilter('clock-dept-filter');
+  const search=document.getElementById('clock-search')?.value.toLowerCase()||'';
+  const deptF=document.getElementById('clock-dept-filter')?.value||'';
+  const today=todayStr(),now=nowTimeStr();
+  let emps=db.employees.filter(e=>e.status==='active');
+  if(db.role==='supervisor')emps=emps.filter(e=>e.deptId==='d1');
+  if(deptF)emps=emps.filter(e=>e.deptId===deptF);
+  if(search)emps=emps.filter(e=>e.name.toLowerCase().includes(search)||e.empId.toLowerCase().includes(search));
+  const grid=document.getElementById('clock-grid');
+  grid.innerHTML=emps.map(e=>{
+    const a=db.attendance[e.id]?.[today];
+    const isClockedIn=a?.in&&!a?.out,isOut=a?.in&&a?.out;
+    const nowM=timeToMins(now);
+    const hrs=isClockedIn?((nowM-timeToMins(a.in))/60).toFixed(1):isOut?calcHours(a.in,a.out)?.toFixed(1):null;
+    const dept=getDept(e.deptId);
+    const isOT=hrs&&parseFloat(hrs)>8;
+    return `<div class="clock-card ${isClockedIn?'clocked-in':''}">
+      <div class="clock-emp-name">${e.name}</div>
+      <div class="clock-dept">${dept?.name||'—'} · ${e.subDept}</div>
+      ${isClockedIn?`<div class="clock-time ${isOT?'text-red':''}">${hrs}h${isOT?` <span style="font-size:11px;">OT</span>`:''}</div><div class="clock-status in">⏱ In at ${a.in}</div>`:isOut?`<div class="clock-time" style="color:var(--muted)">${hrs}h</div><div class="clock-status">✓ ${a.in} – ${a.out}${a.otReason?`<br><span class="ot-reason-tag">${a.otReason}</span>`:''}</div>`:`<div class="clock-time" style="color:var(--muted2);">—</div><div class="clock-status">Not clocked in</div>`}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        ${!isClockedIn&&!isOut?`<button class="btn btn-success btn-xs" onclick="openClockModal('${e.id}','in')">Clock In</button>`:''}
+        ${isClockedIn?`<button class="btn btn-danger btn-xs" onclick="openClockModal('${e.id}','out')">Clock Out</button>`:''}
+        ${isOut?`<span style="font-size:11px;color:var(--muted);">Shift complete</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  if(!emps.length)grid.innerHTML='<div style="color:var(--muted);padding:20px;">No employees found.</div>';
+}
+
+function openClockModal(empId,action){
+  const e=getEmp(empId);if(!e)return;
+  pendingClock={empId,action};
+  const now=new Date();
+  document.getElementById('clock-modal-title').textContent=action==='in'?`Clock In — ${e.name}`:`Clock Out — ${e.name}`;
+  document.getElementById('clock-modal-info').textContent=`${e.empId} · ${e.role} · ${e.subDept}`;
+  document.getElementById('clock-time-input').value=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('clock-note').value='';
+  document.getElementById('clock-ot-reason-select').value='';
+  document.getElementById('clock-ot-reason-row').style.display='none';
+  document.getElementById('clock-ot-reason-custom').style.display='none';
+  // Show OT reason on clock-out if already >8h
+  if(action==='out'){
+    const today=todayStr();
+    const a=db.attendance[empId]?.[today];
+    if(a?.in){
+      const nowStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      const hrs=calcHours(a.in,nowStr);
+      if(hrs&&hrs>8)document.getElementById('clock-ot-reason-row').style.display='';
+    }
+  }
+  document.getElementById('clock-confirm-btn').textContent=action==='in'?'Confirm Clock In':'Confirm Clock Out';
+  document.getElementById('clock-confirm-btn').className=action==='in'?'btn btn-success':'btn btn-danger';
+  openModal('clock-modal');
+}
+function toggleCustomReason(){
+  const v=document.getElementById('clock-ot-reason-select').value;
+  document.getElementById('clock-ot-reason-custom').style.display=v==='Other'?'':'none';
+}
+function confirmClock(){
+  if(!pendingClock)return;
+  const {empId,action}=pendingClock;
+  const time=document.getElementById('clock-time-input').value;
+  const note=document.getElementById('clock-note').value;
+  const today=todayStr();
+  if(!db.attendance[empId])db.attendance[empId]={};
+  if(!db.attendance[empId][today])db.attendance[empId][today]={};
+  if(action==='in'){
+    db.attendance[empId][today].in=time;
+  } else {
+    db.attendance[empId][today].out=time;
+    const reasonSel=document.getElementById('clock-ot-reason-select').value;
+    const reasonCustom=document.getElementById('clock-ot-custom-input').value;
+    db.attendance[empId][today].otReason=reasonSel==='Other'?reasonCustom:reasonSel;
+  }
+  db.attendance[empId][today].note=note;
+  closeModal('clock-modal');
+  renderClockPage();
+  renderDashboard();
+}
+
+// ─── EMPLOYEES ───
+function renderEmployees(){
+  populateDeptFilter('emp-dept-filter');
+  const search=document.getElementById('emp-search')?.value.toLowerCase()||'';
+  const deptF=document.getElementById('emp-dept-filter')?.value||'';
+  let emps=[...db.employees];
+  if(deptF)emps=emps.filter(e=>e.deptId===deptF);
+  if(search)emps=emps.filter(e=>e.name.toLowerCase().includes(search)||e.empId.toLowerCase().includes(search)||e.role.toLowerCase().includes(search));
+  const canEdit=['hr','manager'].includes(db.role);
+  const tbl=document.getElementById('emp-table');
+  if(!emps.length){tbl.innerHTML='<tr class="empty-row"><td colspan="8">No employees found.</td></tr>';return;}
+  tbl.innerHTML=emps.map(e=>{
+    const dept=getDept(e.deptId);
+    return `<tr>
+      <td><strong>${e.name}</strong></td>
+      <td class="mono text-muted">${e.empId}</td>
+      <td>${dept?.name||'—'}</td><td>${e.subDept}</td><td>${e.role}</td>
+      <td class="mono">KES ${e.wage}/hr</td>
+      <td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status}</span></td>
+      <td>${canEdit?`<button class="btn btn-ghost btn-xs" onclick="openEditEmployee('${e.id}')" style="margin-right:6px;">Edit</button><button class="btn btn-danger btn-xs" onclick="removeEmployee('${e.id}')">Remove</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddEmployee(){
+  document.getElementById('emp-modal-title').textContent='Add Employee';
+  document.getElementById('emp-edit-id').value='';
+  ['emp-name','emp-id-field','emp-role','emp-wage'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('emp-id-field').value='EMP-0'+String(db.nextEmpNum).padStart(2,'0');
+  document.getElementById('emp-status').value='active';
+  populateEmpDeptSelect();
+  openModal('emp-modal');
+}
+function openEditEmployee(id){
+  const e=getEmp(id);if(!e)return;
+  document.getElementById('emp-modal-title').textContent='Edit Employee';
+  document.getElementById('emp-edit-id').value=e.id;
+  document.getElementById('emp-name').value=e.name;
+  document.getElementById('emp-id-field').value=e.empId;
+  document.getElementById('emp-role').value=e.role;
+  document.getElementById('emp-wage').value=e.wage;
+  document.getElementById('emp-status').value=e.status;
+  populateEmpDeptSelect(e.deptId,e.subDept);
+  openModal('emp-modal');
+}
+function saveEmployee(){
+  const editId=document.getElementById('emp-edit-id').value;
+  const name=document.getElementById('emp-name').value.trim();
+  const empId=document.getElementById('emp-id-field').value.trim();
+  const deptId=document.getElementById('emp-dept-select').value;
+  const subDept=document.getElementById('emp-subdept-select').value;
+  const role=document.getElementById('emp-role').value.trim();
+  const wage=parseInt(document.getElementById('emp-wage').value)||0;
+  const status=document.getElementById('emp-status').value;
+  if(!name||!empId||!deptId){alert('Please fill Name, ID and Department.');return;}
+  if(editId){const e=getEmp(editId);if(e)Object.assign(e,{name,empId,deptId,subDept,role,wage,status});}
+  else{db.employees.push({id:'e'+Date.now(),name,empId,deptId,subDept,role,wage,status});db.nextEmpNum++;}
+  closeModal('emp-modal');renderEmployees();
+}
+function removeEmployee(id){
+  if(!confirm('Remove this employee?'))return;
+  db.employees=db.employees.filter(e=>e.id!==id);renderEmployees();
+}
+function populateEmpDeptSelect(selDept,selSub){
+  const ds=document.getElementById('emp-dept-select');
+  ds.innerHTML='<option value="">Select department...</option>'+db.departments.map(d=>`<option value="${d.id}" ${d.id===selDept?'selected':''}>${d.name}</option>`).join('');
+  populateSubDepts(selSub);
+}
+function populateSubDepts(selSub){
+  const deptId=document.getElementById('emp-dept-select').value;
+  const dept=getDept(deptId);
+  const ss=document.getElementById('emp-subdept-select');
+  ss.innerHTML='<option value="">Select sub-dept...</option>';
+  if(dept)dept.subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;if(s===selSub)o.selected=true;ss.appendChild(o);});
+}
+
+// ─── DEPARTMENTS ───
+function renderDepartments(){
+  const list=document.getElementById('dept-list');
+  list.innerHTML=db.departments.map(d=>{
+    const count=db.employees.filter(e=>e.deptId===d.id&&e.status==='active').length;
+    return `<div class="dept-section">
+      <div class="dept-header">
+        <div><div class="dept-name">${d.name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">${count} active employees · ${d.subs.length} sub-depts</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-xs" onclick="addSubToDept('${d.id}')">+ Sub-dept</button>
+          <button class="btn btn-danger btn-xs" onclick="removeDept('${d.id}')">Remove</button>
+        </div>
+      </div>
+      <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;">
+        ${d.subs.map(s=>`<span class="badge badge-blue">${s} <span onclick="removeSubDept('${d.id}','${s}')" style="cursor:pointer;margin-left:5px;opacity:0.5;font-size:12px;">✕</span></span>`).join('')}
+        ${!d.subs.length?'<span style="color:var(--muted);font-size:12px;">No sub-departments yet</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openAddDept(){document.getElementById('dept-name-input').value='';document.getElementById('subdept-inputs').innerHTML='';addSubDeptInput();addSubDeptInput();openModal('dept-modal');}
+function addSubDeptInput(){const c=document.getElementById('subdept-inputs');const d=document.createElement('div');d.className='form-row';d.innerHTML=`<input placeholder="Sub-department name" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:4px;" class="subdept-input">`;c.appendChild(d);}
+function saveDepartment(){
+  const name=document.getElementById('dept-name-input').value.trim();if(!name)return;
+  const subs=[...document.querySelectorAll('.subdept-input')].map(i=>i.value.trim()).filter(Boolean);
+  db.departments.push({id:'d'+Date.now(),name,subs});closeModal('dept-modal');renderDepartments();
+}
+function removeDept(id){if(!confirm('Remove department?'))return;db.departments=db.departments.filter(d=>d.id!==id);renderDepartments();}
+function addSubToDept(deptId){const s=prompt('New sub-department name:');if(s?.trim()){const d=getDept(deptId);if(d){d.subs.push(s.trim());renderDepartments();}}}
+function removeSubDept(deptId,sub){const d=getDept(deptId);if(d){d.subs=d.subs.filter(s=>s!==sub);renderDepartments();}}
+
+// ─── OT PAYMENTS ───
+function renderOTPayments(){
+  populateDeptFilter('otp-dept-filter');
+  const deptF=document.getElementById('otp-dept-filter')?.value||'';
+  const statusF=document.getElementById('otp-status-filter')?.value||'';
+  let pmts=[...db.otPayments].sort((a,b)=>b.date.localeCompare(a.date));
+  if(deptF)pmts=pmts.filter(p=>{const e=getEmp(p.empId);return e?.deptId===deptF;});
+  if(statusF)pmts=pmts.filter(p=>p.status===statusF);
+
+  const totalDue=pmts.reduce((s,p)=>s+p.due,0);
+  const totalPaid=pmts.reduce((s,p)=>s+p.paid,0);
+  const totalUnpaid=totalDue-totalPaid;
+  document.getElementById('otp-summary-cards').innerHTML=`
+    <div class="stat-card green"><div class="stat-label">✅ Total Paid</div><div class="stat-value green">KES ${fmt(totalPaid)}</div></div>
+    <div class="stat-card red"><div class="stat-label">❌ Outstanding</div><div class="stat-value red">KES ${fmt(totalUnpaid)}</div></div>
+    <div class="stat-card orange"><div class="stat-label">📋 Total Records</div><div class="stat-value orange">${pmts.length}</div></div>
+    <div class="stat-card blue"><div class="stat-label">💰 Total OT Due</div><div class="stat-value blue">KES ${fmt(totalDue)}</div></div>
+  `;
+  const canEdit=['hr','manager','ceo'].includes(db.role);
+  const tbl=document.getElementById('otp-table');
+  if(!pmts.length){tbl.innerHTML='<tr class="empty-row"><td colspan="9">No payment records found.</td></tr>';return;}
+  tbl.innerHTML=pmts.map(p=>{
+    const e=getEmp(p.empId);
+    const pill=p.status==='paid'?`<span class="paid-pill paid-full">✓ Paid</span>`:p.status==='partial'?`<span class="paid-pill paid-partial">~ Partial</span>`:`<span class="paid-pill paid-none">Unpaid</span>`;
+    return `<tr>
+      <td><strong>${e?.name||'—'}</strong><br><span class="mono text-muted" style="font-size:11px;">${e?.empId||''}</span></td>
+      <td class="mono">${p.date}</td>
+      <td class="mono">${p.hours}h</td>
+      <td><span class="ot-reason-tag">${p.reason||'—'}</span></td>
+      <td class="mono text-red">KES ${fmt(p.due)}</td>
+      <td class="mono text-green">KES ${fmt(p.paid)}</td>
+      <td>${pill}</td>
+      <td class="mono text-muted">${p.paidDate||'—'}${p.method?`<br><span style="font-size:11px;">${p.method}</span>`:''}</td>
+      <td>${canEdit?`<button class="btn btn-info btn-xs" onclick="openEditOTPayment('${p.id}')" style="margin-right:4px;">Edit</button><button class="btn btn-danger btn-xs" onclick="removeOTPayment('${p.id}')">Del</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+function openOTPaymentModal(empId,date,hours,due,reason){
+  document.getElementById('otp-modal-title').textContent='Log OT Payment';
+  document.getElementById('otp-edit-id').value='';
+  const empSel=document.getElementById('otp-emp-select');
+  empSel.innerHTML='<option value="">Select employee...</option>'+db.employees.filter(e=>e.status==='active').map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${e.name} (${e.empId})</option>`).join('');
+  document.getElementById('otp-date').value=date||todayStr();
+  document.getElementById('otp-hours').value=hours||'';
+  document.getElementById('otp-due').value=due||'';
+  document.getElementById('otp-reason-select').value=reason||'';
+  ['otp-paid','otp-auth','otp-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('otp-paid-date').value='';
+  document.getElementById('otp-status').value='unpaid';
+  document.getElementById('otp-method').value='';
+  document.getElementById('otp-reason-custom').style.display='none';
+  openModal('otp-modal');
+}
+function openEditOTPayment(id){
+  const p=db.otPayments.find(x=>x.id===id);if(!p)return;
+  document.getElementById('otp-modal-title').textContent='Edit OT Payment';
+  document.getElementById('otp-edit-id').value=id;
+  const empSel=document.getElementById('otp-emp-select');
+  empSel.innerHTML='<option value="">Select employee...</option>'+db.employees.map(e=>`<option value="${e.id}" ${e.id===p.empId?'selected':''}>${e.name} (${e.empId})</option>`).join('');
+  document.getElementById('otp-date').value=p.date;
+  document.getElementById('otp-hours').value=p.hours;
+  document.getElementById('otp-due').value=p.due;
+  document.getElementById('otp-paid').value=p.paid;
+  document.getElementById('otp-status').value=p.status;
+  document.getElementById('otp-paid-date').value=p.paidDate||'';
+  document.getElementById('otp-method').value=p.method||'';
+  document.getElementById('otp-auth').value=p.auth||'';
+  document.getElementById('otp-notes').value=p.notes||'';
+  const knownReasons=['Production backlog','Machine breakdown recovery','Rush order / urgent delivery','Staff shortage','Quality rework','End-of-month targets','Preventive maintenance'];
+  if(knownReasons.includes(p.reason)){document.getElementById('otp-reason-select').value=p.reason;document.getElementById('otp-reason-custom').style.display='none';}
+  else{document.getElementById('otp-reason-select').value='Other';document.getElementById('otp-reason-custom').style.display='';document.getElementById('otp-custom-reason').value=p.reason;}
+  openModal('otp-modal');
+}
+function autoFillOTAmount(){
+  const empId=document.getElementById('otp-emp-select').value;
+  const hrs=parseFloat(document.getElementById('otp-hours').value)||0;
+  const e=getEmp(empId);
+  if(e&&hrs>0){document.getElementById('otp-due').value=calcOTCost(hrs,e.wage);}
+}
+function autoCalcDue(){autoFillOTAmount();}
+function updatePayStatus(){
+  const paid=parseFloat(document.getElementById('otp-paid').value)||0;
+  const due=parseFloat(document.getElementById('otp-due').value)||0;
+  if(paid>=due&&due>0)document.getElementById('otp-status').value='paid';
+  else if(paid>0)document.getElementById('otp-status').value='partial';
+  else document.getElementById('otp-status').value='unpaid';
+  if(paid>0&&!document.getElementById('otp-paid-date').value)document.getElementById('otp-paid-date').value=todayStr();
+}
+function toggleOTPCustomReason(){document.getElementById('otp-reason-custom').style.display=document.getElementById('otp-reason-select').value==='Other'?'':'none';}
+function saveOTPayment(){
+  const editId=document.getElementById('otp-edit-id').value;
+  const empId=document.getElementById('otp-emp-select').value;
+  const date=document.getElementById('otp-date').value;
+  const hours=parseFloat(document.getElementById('otp-hours').value)||0;
+  const due=parseFloat(document.getElementById('otp-due').value)||0;
+  const paid=parseFloat(document.getElementById('otp-paid').value)||0;
+  const status=document.getElementById('otp-status').value;
+  const reasonSel=document.getElementById('otp-reason-select').value;
+  const reason=reasonSel==='Other'?document.getElementById('otp-custom-reason').value:reasonSel;
+  const paidDate=document.getElementById('otp-paid-date').value;
+  const method=document.getElementById('otp-method').value;
+  const auth=document.getElementById('otp-auth').value;
+  const notes=document.getElementById('otp-notes').value;
+  if(!empId||!date||!reason){alert('Please fill Employee, Date and Reason.');return;}
+  if(editId){const p=db.otPayments.find(x=>x.id===editId);if(p)Object.assign(p,{empId,date,hours,due,paid,status,reason,paidDate,method,auth,notes});}
+  else db.otPayments.push({id:'otp'+Date.now(),empId,date,hours,due,paid,status,reason,paidDate,method,auth,notes});
+  closeModal('otp-modal');renderOTPayments();
+}
+function removeOTPayment(id){if(!confirm('Delete this payment record?'))return;db.otPayments=db.otPayments.filter(p=>p.id!==id);renderOTPayments();}
+
+// ─── DAILY REPORT ───
+function renderDailyReport(){
+  const date=document.getElementById('report-date-picker')?.value||todayStr();
+  const now=nowTimeStr(),isToday=date===todayStr();
+  const isCeo=db.role==='ceo';
+  let grand={workers:0,otHrs:0,otCost:0,paid:0},deptData={};
+  db.employees.forEach(e=>{
+    const a=db.attendance[e.id]?.[date];if(!a?.in)return;
+    const outT=a.out||(isToday?now:null);if(!outT)return;
+    const hrs=calcHours(a.in,outT);if(!hrs)return;
+    const ot=calcOT(hrs),otCost=calcOTCost(ot,e.wage);
+    const pmt=db.otPayments.find(p=>p.empId===e.id&&p.date===date);
+    grand.workers++;grand.otHrs+=ot;grand.otCost+=otCost;grand.paid+=pmt?.paid||0;
+    if(!deptData[e.deptId])deptData[e.deptId]={workers:0,otHrs:0,otCost:0,rows:[]};
+    deptData[e.deptId].workers++;deptData[e.deptId].otHrs+=ot;deptData[e.deptId].otCost+=otCost;
+    deptData[e.deptId].rows.push({e,a,hrs,ot,otCost,outT,pmt});
+  });
+  const dateLabel=new Date(date+'T12:00:00').toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  let html=`<div class="report-box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div><div style="font-size:20px;font-weight:600;">${dateLabel}</div><div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:3px;">Daily OT Report · ${roleInfo[db.role].name}</div></div>
+    <div style="display:flex;gap:24px;text-align:right;flex-wrap:wrap;">
+      <div><div class="stat-label">OT Hours</div><div style="font-size:20px;font-weight:600;color:var(--accent);">${grand.otHrs.toFixed(1)}h</div></div>
+      <div><div class="stat-label">OT Cost</div><div style="font-size:20px;font-weight:600;color:var(--red);">KES ${fmt(grand.otCost)}</div></div>
+      <div><div class="stat-label">Paid So Far</div><div style="font-size:20px;font-weight:600;color:var(--green);">KES ${fmt(grand.paid)}</div></div>
+      <div><div class="stat-label">Workers</div><div style="font-size:20px;font-weight:600;color:var(--blue);">${grand.workers}</div></div>
+    </div>
+  </div>`;
+  Object.entries(deptData).forEach(([deptId,data])=>{
+    const dept=getDept(deptId);
+    html+=`<div class="dept-section"><div class="dept-header">
+      <div class="dept-name">${dept?.name||'Unknown'}</div>
+      <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);font-family:var(--mono);">
+        <span>${data.workers} workers</span>
+        <span>OT: <strong style="color:var(--accent);">${data.otHrs.toFixed(1)}h</strong></span>
+        <span>Cost: <strong style="color:var(--red);">KES ${fmt(data.otCost)}</strong></span>
+      </div>
+    </div><table style="width:100%;border-collapse:collapse;">
+      <thead style="background:var(--surface2);"><tr>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">Employee</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">Sub-Dept</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">In</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">Out</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">Total</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">OT Hrs</th>
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">OT Reason</th>
+        ${!isCeo?'<th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">OT Cost</th>':''}
+        <th style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);text-align:left;font-weight:400;">Payment</th>
+      </tr></thead>
+      <tbody>${data.rows.map(r=>{
+        const pill=r.pmt?r.pmt.status==='paid'?`<span class="paid-pill paid-full">✓ Paid</span>`:r.pmt.status==='partial'?`<span class="paid-pill paid-partial">~ KES ${fmt(r.pmt.paid)}</span>`:`<span class="paid-pill paid-none">Unpaid</span>`:`<span class="paid-pill paid-none">—</span>`;
+        return `<tr>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);"><strong>${r.e.name}</strong><br><span style="font-size:11px;color:var(--muted);font-family:var(--mono);">${r.e.empId}</span></td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);">${r.e.subDept}</td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);font-family:var(--mono);">${r.a.in}</td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);font-family:var(--mono);">${r.outT}${!r.a.out?'<span style="font-size:10px;color:var(--green);margin-left:4px;">live</span>':''}</td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);font-family:var(--mono);">${r.hrs.toFixed(1)}h</td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);">${r.ot>0?`<span class="badge badge-orange">${r.ot.toFixed(1)}h</span>`:'<span style="color:var(--muted);">—</span>'}</td>
+          <td style="padding:9px 14px;border-top:1px solid var(--border);">${r.a.otReason?`<span class="ot-reason-tag">${r.a.otReason}</span>`:'<span style="color:var(--muted);">—</span>'}</td>
+          ${!isCeo?`<td style="padding:9px 14px;border-top:1px solid var(--border);font-family:var(--mono);">${r.ot>0?`<span style="color:var(--red);">KES ${fmt(r.otCost)}</span>`:'—'}</td>`:''}
+          <td style="padding:9px 14px;border-top:1px solid var(--border);">${pill}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  });
+  if(!Object.keys(deptData).length)html+=`<div style="text-align:center;color:var(--muted);padding:60px;">No attendance data for this date.</div>`;
+  document.getElementById('daily-report-content').innerHTML=html;
+}
+
+// ─── WEEKLY ───
+function renderWeekly(){
+  let rows=[];let weekTotal=0,weekOTH=0;
+  for(let i=6;i>=0;i--){
+    const date=i===0?todayStr():pastDateStr(i);
+    const label=i===0?'Today':new Date(date+'T12:00:00').toLocaleDateString('en-KE',{weekday:'short',month:'short',day:'numeric'});
+    let dayOT=0,dayCost=0,dayW=0,reasons={};
+    db.employees.forEach(e=>{
+      const a=db.attendance[e.id]?.[date];if(!a?.in||!a?.out)return;
+      const hrs=calcHours(a.in,a.out);if(!hrs)return;
+      const ot=calcOT(hrs);dayCost+=calcOTCost(ot,e.wage);dayOT+=ot;dayW++;
+      if(a.otReason)reasons[a.otReason]=(reasons[a.otReason]||0)+1;
+    });
+    weekTotal+=dayCost;weekOTH+=dayOT;
+    const topReason=Object.entries(reasons).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+    rows.push({label,dayCost,dayOT,dayW,topReason,date});
+  }
+  const maxCost=Math.max(...rows.map(r=>r.dayCost),1);
+  rows.reverse();
+  document.getElementById('weekly-content').innerHTML=`
+    <div class="cards-row" style="padding:0 0 16px;"><div class="stat-card orange"><div class="stat-label">⚡ Week OT Cost</div><div class="stat-value orange">KES ${fmt(weekTotal)}</div></div><div class="stat-card blue"><div class="stat-label">⏱ Week OT Hours</div><div class="stat-value blue">${weekOTH.toFixed(1)}h</div></div><div class="stat-card green"><div class="stat-label">📊 Daily Avg OT</div><div class="stat-value green">KES ${fmt(weekTotal/7)}</div></div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Day</th><th>Workers</th><th>OT Hours</th><th>OT Cost</th><th>Top Reason</th><th>Trend</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${r.label}</strong></td>
+        <td class="mono">${r.dayW}</td>
+        <td class="mono ${r.dayOT>0?'text-orange':''}">${r.dayOT.toFixed(1)}h</td>
+        <td class="mono ${r.dayCost>0?'text-red':'text-muted'}">KES ${fmt(r.dayCost)}</td>
+        <td>${r.topReason!=='—'?`<span class="ot-reason-tag">${r.topReason}</span>`:'<span style="color:var(--muted);">—</span>'}</td>
+        <td style="width:160px;"><div class="bar-track"><div class="bar-fill" style="width:${Math.round((r.dayCost/maxCost)*100)}%;background:${r.dayCost>0?'var(--accent)':'var(--surface3)'}"></div></div></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+// ─── MONTHLY ───
+function renderMonthly(){
+  const monthIdx=parseInt(document.getElementById('month-select')?.value??new Date().getMonth());
+  const year=parseInt(document.getElementById('month-year-select')?.value??new Date().getFullYear());
+  const daysInMonth=new Date(year,monthIdx+1,0).getDate();
+  let grand={workers:new Set(),otHrs:0,otCost:0,paid:0};
+  let deptData={},reasonCount={},dailyCosts=[];
+
+  for(let d=1;d<=daysInMonth;d++){
+    const date=`${year}-${String(monthIdx+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let dayCost=0;
+    db.employees.forEach(e=>{
+      const a=db.attendance[e.id]?.[date];if(!a?.in||!a?.out)return;
+      const hrs=calcHours(a.in,a.out);if(!hrs)return;
+      const ot=calcOT(hrs),otCost=calcOTCost(ot,e.wage);
+      grand.workers.add(e.id);grand.otHrs+=ot;grand.otCost+=otCost;dayCost+=otCost;
+      const pmt=db.otPayments.find(p=>p.empId===e.id&&p.date===date);
+      grand.paid+=pmt?.paid||0;
+      if(a.otReason)reasonCount[a.otReason]=(reasonCount[a.otReason]||0)+1;
+      if(!deptData[e.deptId])deptData[e.deptId]={otHrs:0,otCost:0,workers:new Set()};
+      deptData[e.deptId].otHrs+=ot;deptData[e.deptId].otCost+=otCost;deptData[e.deptId].workers.add(e.id);
+    });
+    dailyCosts.push({d,cost:dayCost});
+  }
+  const maxDayCost=Math.max(...dailyCosts.map(x=>x.cost),1);
+  const topReasons=Object.entries(reasonCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  document.getElementById('monthly-content').innerHTML=`
+    <div class="report-box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <div><div style="font-size:20px;font-weight:600;">${MONTHS[monthIdx]} ${year}</div><div style="font-size:12px;color:var(--muted);font-family:var(--mono);">Monthly Overtime Report</div></div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;text-align:right;">
+        <div><div class="stat-label">OT Hours</div><div style="font-size:20px;font-weight:600;color:var(--accent);">${grand.otHrs.toFixed(1)}h</div></div>
+        <div><div class="stat-label">OT Cost</div><div style="font-size:20px;font-weight:600;color:var(--red);">KES ${fmt(grand.otCost)}</div></div>
+        <div><div class="stat-label">Paid</div><div style="font-size:20px;font-weight:600;color:var(--green);">KES ${fmt(grand.paid)}</div></div>
+        <div><div class="stat-label">Balance</div><div style="font-size:20px;font-weight:600;color:var(--purple);">KES ${fmt(grand.otCost-grand.paid)}</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="report-box"><div style="font-size:13px;font-weight:500;margin-bottom:12px;">📊 Daily Cost — ${MONTHS[monthIdx]}</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:80px;">
+          ${dailyCosts.map(x=>`<div title="Day ${x.d}: KES ${fmt(x.cost)}" style="flex:1;min-width:4px;background:${x.cost>0?'var(--accent)':'var(--surface3)'};height:${Math.max(4,Math.round((x.cost/maxDayCost)*80))}px;border-radius:2px 2px 0 0;opacity:0.85;cursor:default;"></div>`).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);"><span>1</span><span>${Math.round(daysInMonth/2)}</span><span>${daysInMonth}</span></div>
+      </div>
+      <div class="report-box"><div style="font-size:13px;font-weight:500;margin-bottom:12px;">🔍 Top OT Reasons</div>
+        ${topReasons.length?topReasons.map(([r,c],i)=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span class="ot-reason-tag" style="font-size:11px;">${r}</span>
+          <span class="mono text-orange" style="font-size:12px;">${c}x</span>
+        </div>`).join(''):'<div style="color:var(--muted);font-size:13px;">No OT reasons recorded</div>'}
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Department</th><th>Workers</th><th>OT Hours</th><th>OT Cost</th><th>% of Total</th></tr></thead>
+      <tbody>${Object.entries(deptData).sort((a,b)=>b[1].otCost-a[1].otCost).map(([dId,data])=>{
+        const dept=getDept(dId);const pct=grand.otCost>0?Math.round((data.otCost/grand.otCost)*100):0;
+        return `<tr>
+          <td><strong>${dept?.name||'—'}</strong></td>
+          <td class="mono">${data.workers.size}</td>
+          <td class="mono text-orange">${data.otHrs.toFixed(1)}h</td>
+          <td class="mono text-red">KES ${fmt(data.otCost)}</td>
+          <td style="width:180px;"><div style="display:flex;align-items:center;gap:10px;"><div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${pct}%;background:var(--accent);"></div></div><span class="mono" style="font-size:12px;min-width:30px;">${pct}%</span></div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+}
+
+// ─── YEARLY ───
+function renderYearly(){
+  const year=parseInt(document.getElementById('year-select')?.value??new Date().getFullYear());
+  let monthData=MONTHS.map((name,i)=>({name,otHrs:0,otCost:0,paid:0,workers:new Set(),reasons:{}}));
+  let yearTotal={otHrs:0,otCost:0,paid:0};
+  let empOT={};
+
+  for(let m=0;m<12;m++){
+    const daysInMonth=new Date(year,m+1,0).getDate();
+    for(let d=1;d<=daysInMonth;d++){
+      const date=`${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      db.employees.forEach(e=>{
+        const a=db.attendance[e.id]?.[date];if(!a?.in||!a?.out)return;
+        const hrs=calcHours(a.in,a.out);if(!hrs)return;
+        const ot=calcOT(hrs),cost=calcOTCost(ot,e.wage);
+        monthData[m].otHrs+=ot;monthData[m].otCost+=cost;monthData[m].workers.add(e.id);
+        if(a.otReason)monthData[m].reasons[a.otReason]=(monthData[m].reasons[a.otReason]||0)+1;
+        yearTotal.otHrs+=ot;yearTotal.otCost+=cost;
+        if(!empOT[e.id])empOT[e.id]={e,otHrs:0,otCost:0};
+        empOT[e.id].otHrs+=ot;empOT[e.id].otCost+=cost;
+        const pmt=db.otPayments.find(p=>p.empId===e.id&&p.date===date);
+        monthData[m].paid+=pmt?.paid||0;yearTotal.paid+=pmt?.paid||0;
+      });
+    }
+  }
+  const maxMonth=Math.max(...monthData.map(m=>m.otCost),1);
+  const topEmps=Object.values(empOT).sort((a,b)=>b.otCost-a.otCost).slice(0,5);
+
+  document.getElementById('yearly-content').innerHTML=`
+    <div class="report-box" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <div><div style="font-size:22px;font-weight:600;">${year} Annual Report</div><div style="font-size:12px;color:var(--muted);font-family:var(--mono);">Full Year Overtime Overview</div></div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;text-align:right;">
+        <div><div class="stat-label">Total OT Hours</div><div style="font-size:22px;font-weight:600;color:var(--accent);">${yearTotal.otHrs.toFixed(0)}h</div></div>
+        <div><div class="stat-label">Total OT Cost</div><div style="font-size:22px;font-weight:600;color:var(--red);">KES ${fmt(yearTotal.otCost)}</div></div>
+        <div><div class="stat-label">Total Paid</div><div style="font-size:22px;font-weight:600;color:var(--green);">KES ${fmt(yearTotal.paid)}</div></div>
+        <div><div class="stat-label">Unpaid Balance</div><div style="font-size:22px;font-weight:600;color:var(--purple);">KES ${fmt(yearTotal.otCost-yearTotal.paid)}</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="report-box">
+        <div style="font-size:13px;font-weight:500;margin-bottom:16px;">📈 Monthly OT Cost — ${year}</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:100px;">
+          ${monthData.map((m,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div title="${m.name}: KES ${fmt(m.otCost)}" style="width:100%;background:${m.otCost>0?'var(--accent)':'var(--surface3)'};height:${Math.max(3,Math.round((m.otCost/maxMonth)*100))}px;border-radius:3px 3px 0 0;opacity:0.85;cursor:default;"></div>
+            <span style="font-size:9px;color:var(--muted);font-family:var(--mono);">${m.name.slice(0,3)}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="report-box">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px;">🏆 Top OT Earners</div>
+        ${topEmps.map((x,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+          <div><span style="font-size:11px;color:var(--muted);">#${i+1}</span> <span style="font-size:13px;">${x.e.name.split(' ')[0]}</span></div>
+          <span class="mono text-orange" style="font-size:12px;">KES ${fmt(x.otCost)}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Month</th><th>Workers</th><th>OT Hours</th><th>OT Cost</th><th>Paid</th><th>Balance</th><th>Top Reason</th></tr></thead>
+      <tbody>${monthData.map((m,i)=>{
+        const topR=Object.entries(m.reasons).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+        return `<tr>
+          <td><strong>${m.name}</strong></td>
+          <td class="mono">${m.workers.size}</td>
+          <td class="mono text-orange">${m.otHrs.toFixed(1)}h</td>
+          <td class="mono text-red">KES ${fmt(m.otCost)}</td>
+          <td class="mono text-green">KES ${fmt(m.paid)}</td>
+          <td class="mono ${m.otCost-m.paid>0?'text-red':'text-muted'}">KES ${fmt(m.otCost-m.paid)}</td>
+          <td>${topR!=='—'?`<span class="ot-reason-tag">${topR}</span>`:'<span style="color:var(--muted);">—</span>'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+}
+
+// ─── HELPERS ───
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function populateDeptFilter(selectId){
+  const sel=document.getElementById(selectId);if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All Departments</option>'+db.departments.map(d=>`<option value="${d.id}" ${d.id===cur?'selected':''}>${d.name}</option>`).join('');
+}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.add('hidden');}));
+document.addEventListener('click',e=>{if(!e.target.closest('.role-switcher')&&!e.target.closest('.role-badge'))document.getElementById('role-switcher').style.display='none';});
+
+// ─── INIT ───
+seedData();
+updateDashDate();
+setRole('hr');
+setInterval(updateClock,1000);
+setInterval(()=>{if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();},30000);
+updateClock();
+</script>
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PortfolioLens — Financial Reporting Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0f14;
+  --ink2: #13161e;
+  --ink3: #1a1e2a;
+  --ink4: #222736;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold-dim: rgba(201,168,76,0.12);
+  --green: #3ecf8e;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --muted2: #4b5563;
+  --serif: 'Playfair Display', serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--mono);background:var(--ink);color:var(--text);min-height:100vh;font-size:13px;}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:200px;min-width:200px;background:var(--ink2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;}
+.logo-area{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.logo-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--gold);letter-spacing:0.3px;}
+.logo-sub{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;}
+.nav{flex:1;padding:12px 0;}
+.nav-label{padding:14px 16px 6px;font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.1em;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:var(--muted);font-size:11px;transition:all 0.15s;border-left:2px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--ink3);}
+.nav-item.active{color:var(--gold);background:var(--gold-dim);border-left-color:var(--gold);}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.fund-badge{margin:12px;background:var(--ink3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;}
+.fund-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
+.fund-value{font-size:16px;font-weight:500;color:var(--gold);}
+.fund-meta{font-size:9px;color:var(--green);margin-top:2px;}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--ink);}
+.page{display:none;padding:24px 28px;}.page.active{display:block;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;}
+.page-title{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--text);}
+.page-sub{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:0.04em;}
+.header-right{display:flex;gap:8px;align-items:center;}
+.btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;transition:all 0.15s;}
+.btn-gold{background:var(--gold);color:#000;font-weight:500;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-ghost{background:var(--ink3);color:var(--text);border:1px solid var(--border2);}
+.btn-ghost:hover{background:var(--ink4);}
+.select-sm{background:var(--ink3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--ink2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.stat.gold::after{background:linear-gradient(90deg,var(--gold),transparent);}
+.stat.green::after{background:linear-gradient(90deg,var(--green),transparent);}
+.stat.red::after{background:linear-gradient(90deg,var(--red),transparent);}
+.stat.blue::after{background:linear-gradient(90deg,var(--blue),transparent);}
+.stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.stat-value{font-family:var(--serif);font-size:22px;font-weight:600;}
+.stat-value.gold{color:var(--gold);}
+.stat-value.green{color:var(--green);}
+.stat-value.red{color:var(--red);}
+.stat-value.blue{color:var(--blue);}
+.stat-change{font-size:10px;margin-top:5px;}
+.up{color:var(--green);}.down{color:var(--red);}
+
+/* PANELS */
+.panel{background:var(--ink2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.panel-title{font-size:12px;font-weight:500;color:var(--text);}
+.panel-body{padding:16px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{padding:8px 12px;text-align:left;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:400;border-bottom:1px solid var(--border);}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.num{font-family:var(--mono);text-align:right;}
+.positive{color:var(--green);}
+.negative{color:var(--red);}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:500;}
+.badge-green{background:rgba(62,207,142,0.12);color:var(--green);}
+.badge-red{background:rgba(248,113,113,0.12);color:var(--red);}
+.badge-gold{background:rgba(201,168,76,0.12);color:var(--gold);}
+.badge-blue{background:rgba(96,165,250,0.12);color:var(--blue);}
+.badge-gray{background:var(--ink3);color:var(--muted);}
+
+/* CHART BARS */
+.chart-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.chart-label{font-size:10px;color:var(--muted);width:70px;flex-shrink:0;}
+.chart-track{flex:1;height:8px;background:var(--ink3);border-radius:4px;overflow:hidden;}
+.chart-bar{height:100%;border-radius:4px;}
+.chart-val{font-size:10px;color:var(--text);width:80px;text-align:right;flex-shrink:0;}
+
+/* MONTHLY CHART */
+.monthly-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px;}
+.month-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.month-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;transition:opacity 0.2s;}
+.month-bar:hover{opacity:1!important;}
+.month-label{font-size:8px;color:var(--muted);}
+
+/* COVENANT */
+.covenant-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.covenant-item:last-child{border-bottom:none;}
+.covenant-name{font-size:11px;color:var(--text);}
+.covenant-company{font-size:9px;color:var(--muted);margin-top:2px;}
+.covenant-right{text-align:right;}
+.covenant-val{font-size:11px;font-weight:500;}
+.covenant-threshold{font-size:9px;color:var(--muted);}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* WATERFALL */
+.waterfall{display:flex;align-items:flex-end;gap:8px;height:120px;padding:4px;}
+.wf-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.wf-bar{width:100%;border-radius:3px;position:relative;}
+.wf-label{font-size:8px;color:var(--muted);text-align:center;}
+.wf-val{font-size:9px;font-weight:500;text-align:center;}
+
+/* TAB BAR */
+.tab-bar{display:flex;gap:2px;background:var(--ink3);border-radius:8px;padding:3px;width:fit-content;margin-bottom:16px;}
+.tab-btn{padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;color:var(--muted);border:none;background:none;font-family:var(--mono);transition:all 0.15s;}
+.tab-btn.active{background:var(--ink2);color:var(--text);}
+
+/* ROLE SWITCHER */
+.role-sw{position:fixed;bottom:16px;right:16px;background:var(--ink2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;z-index:50;}
+.role-sw-title{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.role-sw-btn{display:block;width:100%;text-align:left;padding:6px 8px;border-radius:6px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:11px;transition:all 0.15s;margin-bottom:2px;}
+.role-sw-btn:hover{background:var(--ink3);color:var(--text);}
+.role-sw-btn.active{background:var(--gold-dim);color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-name">PortfolioLens</div>
+    <div class="logo-sub">Financial Reporting Suite</div>
+  </div>
+  <div class="fund-badge">
+    <div class="fund-label">AUM</div>
+    <div class="fund-value">KSh 2.8B</div>
+    <div class="fund-meta">↑ 12.4% YTD</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Reporting</div>
+    <div class="nav-item active" onclick="showPage('executive')" data-page="executive"><span class="nav-dot"></span> Executive Summary</div>
+    <div class="nav-item" onclick="showPage('pl')" data-page="pl"><span class="nav-dot"></span> P&L Statement</div>
+    <div class="nav-item" onclick="showPage('cashflow')" data-page="cashflow"><span class="nav-dot"></span> Cash Flow</div>
+    <div class="nav-label">Portfolio</div>
+    <div class="nav-item" onclick="showPage('companies')" data-page="companies"><span class="nav-dot"></span> Companies</div>
+    <div class="nav-item" onclick="showPage('covenants')" data-page="covenants"><span class="nav-dot"></span> Covenant Tracker</div>
+    <div class="nav-label">Analysis</div>
+    <div class="nav-item" onclick="showPage('sector')" data-page="sector"><span class="nav-dot"></span> Sector Analysis</div>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- EXECUTIVE SUMMARY -->
+<div class="page active" id="page-executive">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Executive Summary</div>
+      <div class="page-sub">Portfolio overview · As of December 2024 · 14 companies</div>
+    </div>
+    <div class="header-right">
+      <select class="select-sm"><option>FY 2024</option><option>FY 2023</option></select>
+      <button class="btn btn-ghost">Export PDF</button>
+      <button class="btn btn-gold">IC Report</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat gold"><div class="stat-label">Portfolio Revenue</div><div class="stat-value gold">KSh 8.4B</div><div class="stat-change up">↑ 18.2% vs LY</div></div>
+    <div class="stat green"><div class="stat-label">Aggregate EBITDA</div><div class="stat-value green">KSh 1.9B</div><div class="stat-change up">↑ 22.7% vs LY</div></div>
+    <div class="stat blue"><div class="stat-label">Cash Position</div><div class="stat-value blue">KSh 640M</div><div class="stat-change" style="color:var(--muted);">Across 14 entities</div></div>
+    <div class="stat red"><div class="stat-label">Total Debt</div><div class="stat-value red">KSh 1.1B</div><div class="stat-change" style="color:var(--muted);">2.4x Net Debt/EBITDA</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Monthly Revenue — Portfolio Consolidated</div></div>
+      <div class="panel-body">
+        <div class="monthly-chart" id="rev-chart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span style="font-size:9px;color:var(--muted);">Jan 2024</span>
+          <span style="font-size:9px;color:var(--muted);">Dec 2024</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">EBITDA Margin by Sector</div></div>
+      <div class="panel-body">
+        <div id="ebitda-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Portfolio Companies — Performance Snapshot</div>
+      <span class="badge badge-gold">14 active investments</span>
+    </div>
+    <table>
+      <thead><tr><th>Company</th><th>Sector</th><th>Revenue</th><th>EBITDA</th><th>Margin</th><th>YoY Growth</th><th>Status</th></tr></thead>
+      <tbody id="exec-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- P&L -->
+<div class="page" id="page-pl">
+  <div class="page-header">
+    <div><div class="page-title">Consolidated P&L</div><div class="page-sub">Full year · All 14 portfolio companies · KSh thousands</div></div>
+    <div class="header-right">
+      <select class="select-sm" id="pl-company"><option value="all">All Companies</option></select>
+      <select class="select-sm"><option>FY 2024</option><option>FY 2023</option></select>
+      <button class="btn btn-ghost">Export</button>
+    </div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="stat gold"><div class="stat-label">Total Revenue</div><div class="stat-value gold">8,421,340</div><div class="stat-change up">↑ 18.2%</div></div>
+    <div class="stat green"><div class="stat-label">Net Profit</div><div class="stat-value green">1,124,580</div><div class="stat-change up">↑ 31.4%</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Income Statement</div></div>
+    <table>
+      <thead><tr><th>Line Item</th><th class="num">FY 2024</th><th class="num">FY 2023</th><th class="num">Variance</th><th class="num">Var %</th></tr></thead>
+      <tbody id="pl-table"></tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">P&L Waterfall — Revenue to Net Profit</div></div>
+    <div class="panel-body">
+      <div class="waterfall" id="waterfall"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CASH FLOW -->
+<div class="page" id="page-cashflow">
+  <div class="page-header">
+    <div><div class="page-title">Cash Flow Monitor</div><div class="page-sub">13-week rolling forecast · All entities</div></div>
+    <div class="header-right">
+      <select class="select-sm"><option>All Companies</option></select>
+      <button class="btn btn-ghost">Export</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat green"><div class="stat-label">Opening Cash</div><div class="stat-value green">KSh 482M</div></div>
+    <div class="stat gold"><div class="stat-label">Operating CF</div><div class="stat-value gold">KSh 318M</div><div class="stat-change up">↑ Positive</div></div>
+    <div class="stat red"><div class="stat-label">Investing CF</div><div class="stat-value red">KSh (142M)</div></div>
+    <div class="stat blue"><div class="stat-label">Closing Cash</div><div class="stat-value blue">KSh 640M</div><div class="stat-change up">↑ 32.8%</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">13-Week Cash Flow Forecast</div><span class="badge badge-green">Auto-updated daily</span></div>
+    <table>
+      <thead><tr><th>Week</th><th>Period</th><th class="num">Opening</th><th class="num">Inflows</th><th class="num">Outflows</th><th class="num">Net</th><th class="num">Closing</th><th>Trend</th></tr></thead>
+      <tbody id="cf-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- COMPANIES -->
+<div class="page" id="page-companies">
+  <div class="page-header">
+    <div><div class="page-title">Portfolio Companies</div><div class="page-sub">Individual company drilldown</div></div>
+    <div class="header-right">
+      <select class="select-sm" id="company-select" onchange="renderCompanyDetail()"><option value="">Select company...</option></select>
+    </div>
+  </div>
+  <div id="company-detail">
+    <div style="text-align:center;padding:60px;color:var(--muted);">Select a company from the dropdown to view its financials</div>
+  </div>
+</div>
+
+<!-- COVENANTS -->
+<div class="page" id="page-covenants">
+  <div class="page-header">
+    <div><div class="page-title">Covenant Tracker</div><div class="page-sub">Debt covenant compliance · All leveraged companies</div></div>
+    <button class="btn btn-ghost">Export Report</button>
+  </div>
+  <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat green"><div class="stat-label">Compliant</div><div class="stat-value green">11</div><div class="stat-change" style="color:var(--muted);">covenants</div></div>
+    <div class="stat gold"><div class="stat-label">Watch List</div><div class="stat-value gold">3</div><div class="stat-change" style="color:var(--muted);">within 10% of threshold</div></div>
+    <div class="stat red"><div class="stat-label">Breached</div><div class="stat-value red">1</div><div class="stat-change" style="color:var(--muted);">requires action</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Covenant Status — All Leveraged Portfolio Companies</div></div>
+    <div class="panel-body" id="covenant-list"></div>
+  </div>
+</div>
+
+<!-- SECTOR -->
+<div class="page" id="page-sector">
+  <div class="page-header">
+    <div><div class="page-title">Sector Analysis</div><div class="page-sub">Performance by sector, geography and investment stage</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Revenue by Sector</div></div>
+      <div class="panel-body" id="sector-rev-chart"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">EBITDA Margin by Sector</div></div>
+      <div class="panel-body" id="sector-margin-chart"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><div class="panel-title">Sector Breakdown</div></div>
+    <table>
+      <thead><tr><th>Sector</th><th>Companies</th><th class="num">Revenue</th><th class="num">EBITDA</th><th class="num">Margin</th><th class="num">YoY</th><th>Exposure</th></tr></thead>
+      <tbody id="sector-table"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ROLE SWITCHER -->
+<div class="role-sw">
+  <div class="role-sw-title">View As</div>
+  <button class="role-sw-btn active" id="rb-ic" onclick="setRole('ic')">📊 Investment Committee</button>
+  <button class="role-sw-btn" id="rb-cfo" onclick="setRole('cfo')">💼 CFO</button>
+  <button class="role-sw-btn" id="rb-analyst" onclick="setRole('analyst')">🔍 Analyst</button>
+</div>
+
+<script>
+// ═══ DATA ═══
+const companies = [
+  {id:'c1',name:'Savanna Foods Ltd',sector:'FMCG',geo:'Kenya',stage:'Growth',rev:1240000,ebitda:248000,margin:20,yoy:22,cash:84000,debt:180000,status:'healthy'},
+  {id:'c2',name:'EastPak Industries',sector:'Manufacturing',geo:'Kenya',stage:'Mature',rev:980000,ebitda:156800,margin:16,yoy:8,cash:62000,debt:320000,status:'watch'},
+  {id:'c3',name:'Kampala Fresh',sector:'Agribusiness',geo:'Uganda',stage:'Early',rev:420000,ebitda:63000,margin:15,yoy:34,cash:28000,debt:80000,status:'healthy'},
+  {id:'c4',name:'NairobiNet Fibre',sector:'Telecoms',geo:'Kenya',stage:'Growth',rev:860000,ebitda:258000,margin:30,yoy:41,cash:120000,debt:200000,status:'healthy'},
+  {id:'c5',name:'Meridian Clinics',sector:'Healthcare',geo:'Kenya',stage:'Growth',rev:540000,ebitda:97200,margin:18,yoy:28,cash:45000,debt:95000,status:'healthy'},
+  {id:'c6',name:'Lagos Logistics Co',sector:'Logistics',geo:'Nigeria',stage:'Early',rev:310000,ebitda:31000,margin:10,yoy:55,cash:18000,debt:60000,status:'watch'},
+  {id:'c7',name:'Rift Valley Cement',sector:'Construction',geo:'Kenya',stage:'Mature',rev:1120000,ebitda:179200,margin:16,yoy:5,cash:95000,debt:380000,status:'breach'},
+  {id:'c8',name:'Mombasa Coldchain',sector:'Logistics',geo:'Kenya',stage:'Growth',rev:290000,ebitda:52200,margin:18,yoy:19,cash:22000,debt:70000,status:'healthy'},
+  {id:'c9',name:'Abuja Power Solar',sector:'Energy',geo:'Nigeria',stage:'Early',rev:180000,ebitda:27000,margin:15,yoy:82,cash:35000,debt:120000,status:'healthy'},
+  {id:'c10',name:'Great Lakes Pharma',sector:'Healthcare',geo:'Tanzania',stage:'Growth',rev:340000,ebitda:68000,margin:20,yoy:31,cash:29000,debt:55000,status:'healthy'},
+  {id:'c11',name:'Serengeti Brew Co',sector:'FMCG',geo:'Tanzania',stage:'Mature',rev:620000,ebitda:111600,margin:18,yoy:11,cash:58000,debt:140000,status:'watch'},
+  {id:'c12',name:'Kigali TechHub',sector:'Technology',geo:'Rwanda',stage:'Early',rev:95000,ebitda:9500,margin:10,yoy:110,cash:42000,debt:0,status:'healthy'},
+  {id:'c13',name:'Naivasha Flowers',sector:'Agribusiness',geo:'Kenya',stage:'Mature',rev:280000,ebitda:50400,margin:18,yoy:7,cash:19000,debt:45000,status:'healthy'},
+  {id:'c14',name:'Dar Port Logistics',sector:'Logistics',geo:'Tanzania',stage:'Growth',rev:340000,ebitda:54400,margin:16,yoy:24,cash:25000,debt:85000,status:'healthy'},
+];
+
+const plLines = [
+  {item:'Revenue',fy24:8421340,fy23:7124600,indent:0,bold:true},
+  {item:'Cost of Goods Sold',fy24:-5052804,fy23:-4417452,indent:0},
+  {item:'Gross Profit',fy24:3368536,fy23:2707148,indent:0,bold:true,underline:true},
+  {item:'Operating Expenses',fy24:-1178987,fy23:-1054081,indent:0},
+  {item:'  Salaries & Benefits',fy24:-620000,fy23:-558000,indent:1},
+  {item:'  Marketing',fy24:-210000,fy23:-198000,indent:1},
+  {item:'  G&A',fy24:-348987,fy23:-298081,indent:1},
+  {item:'EBITDA',fy24:2189549,fy23:1653067,indent:0,bold:true,underline:true},
+  {item:'Depreciation & Amortisation',fy24:-284000,fy23:-260000,indent:0},
+  {item:'EBIT',fy24:1905549,fy23:1393067,indent:0,bold:true},
+  {item:'Finance Costs',fy24:-342000,fy23:-280000,indent:0},
+  {item:'Profit Before Tax',fy24:1563549,fy23:1113067,indent:0,bold:true,underline:true},
+  {item:'Tax',fy24:-438969,fy23:-311659,indent:0},
+  {item:'Net Profit',fy24:1124580,fy23:801408,indent:0,bold:true,color:'green'},
+];
+
+const cfWeeks = [
+  {w:1,p:'30 Sep – 6 Oct',o:482000,in:68000,out:54000},{w:2,p:'7–13 Oct',o:496000,in:72000,out:61000},
+  {w:3,p:'14–20 Oct',o:507000,in:55000,out:48000},{w:4,p:'21–27 Oct',o:514000,in:84000,out:72000},
+  {w:5,p:'28 Oct–3 Nov',o:526000,in:66000,out:58000},{w:6,p:'4–10 Nov',o:534000,in:71000,out:63000},
+  {w:7,p:'11–17 Nov',o:542000,in:90000,out:68000},{w:8,p:'18–24 Nov',o:564000,in:58000,out:52000},
+  {w:9,p:'25 Nov–1 Dec',o:570000,in:88000,out:75000},{w:10,p:'2–8 Dec',o:583000,in:95000,out:82000},
+  {w:11,p:'9–15 Dec',o:596000,in:72000,out:61000},{w:12,p:'16–22 Dec',o:607000,in:110000,out:77000},
+  {w:13,p:'23–29 Dec',o:640000,in:65000,out:65000},
+];
+
+const covenants = [
+  {name:'Net Debt / EBITDA',company:'EastPak Industries',current:'3.8x',threshold:'< 4.0x',status:'watch',pct:95},
+  {name:'Interest Coverage',company:'Rift Valley Cement',current:'1.8x',threshold:'> 2.0x',status:'breach',pct:110},
+  {name:'Debt Service Coverage',company:'Serengeti Brew Co',current:'1.12x',threshold:'> 1.10x',status:'watch',pct:98},
+  {name:'Net Debt / EBITDA',company:'Savanna Foods Ltd',current:'0.73x',threshold:'< 3.0x',status:'ok',pct:24},
+  {name:'Current Ratio',company:'NairobiNet Fibre',current:'2.4x',threshold:'> 1.5x',status:'ok',pct:30},
+  {name:'Net Debt / EBITDA',company:'Kampala Fresh',current:'1.27x',threshold:'< 3.5x',status:'ok',pct:36},
+  {name:'Interest Coverage',company:'Lagos Logistics Co',current:'3.2x',threshold:'> 2.5x',status:'ok',pct:20},
+  {name:'Leverage Ratio',company:'Mombasa Coldchain',current:'1.35x',threshold:'< 2.0x',status:'watch',pct:68},
+];
+
+const sectors = [
+  {name:'FMCG',cos:2,rev:1860000,ebitda:359600,margin:19.3,yoy:17},
+  {name:'Manufacturing',cos:1,rev:980000,ebitda:156800,margin:16,yoy:8},
+  {name:'Logistics',cos:3,rev:940000,ebitda:137600,margin:14.6,yoy:25},
+  {name:'Healthcare',cos:2,rev:880000,ebitda:165200,margin:18.8,yoy:29},
+  {name:'Agribusiness',cos:2,rev:700000,ebitda:113400,margin:16.2,yoy:18},
+  {name:'Telecoms',cos:1,rev:860000,ebitda:258000,margin:30,yoy:41},
+  {name:'Construction',cos:1,rev:1120000,ebitda:179200,margin:16,yoy:5},
+  {name:'Energy',cos:1,rev:180000,ebitda:27000,margin:15,yoy:82},
+  {name:'Technology',cos:1,rev:95000,ebitda:9500,margin:10,yoy:110},
+];
+
+const monthlyRev = [580,610,640,720,690,750,810,770,820,880,910,960];
+
+// ═══ UTILS ═══
+function fmt(n){return Math.abs(Math.round(n)).toLocaleString();}
+function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':(n/1000).toFixed(0)+'K';}
+
+// ═══ NAV ═══
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  const renders={executive:renderExecutive,pl:renderPL,cashflow:renderCashflow,companies:renderCompanies,covenants:renderCovenants,sector:renderSector};
+  if(renders[name])renders[name]();
+}
+
+// ═══ ROLE ═══
+function setRole(r){
+  ['ic','cfo','analyst'].forEach(x=>document.getElementById('rb-'+x).classList.remove('active'));
+  document.getElementById('rb-'+r).classList.add('active');
+}
+
+// ═══ EXECUTIVE ═══
+function renderExecutive(){
+  // Revenue chart
+  const max=Math.max(...monthlyRev);
+  const months=['J','F','M','A','M','J','J','A','S','O','N','D'];
+  document.getElementById('rev-chart').innerHTML=monthlyRev.map((v,i)=>`
+    <div class="month-bar-wrap">
+      <div class="month-bar" style="height:${Math.round((v/max)*88)}px;background:linear-gradient(to top,#c9a84c,#e8c96a);opacity:0.8;" title="KSh ${v}M"></div>
+      <div class="month-label">${months[i]}</div>
+    </div>`).join('');
+
+  // EBITDA margins
+  document.getElementById('ebitda-chart').innerHTML=sectors.slice(0,6).map(s=>`
+    <div class="chart-row">
+      <div class="chart-label">${s.name}</div>
+      <div class="chart-track"><div class="chart-bar" style="width:${s.margin*3}%;background:linear-gradient(to right,#3ecf8e,#6ee7b7);"></div></div>
+      <div class="chart-val">${s.margin}%</div>
+    </div>`).join('');
+
+  // Table
+  document.getElementById('exec-table').innerHTML=companies.map(c=>{
+    const statusBadge=c.status==='healthy'?'badge-green':c.status==='watch'?'badge-gold':'badge-red';
+    const statusLabel=c.status==='healthy'?'Healthy':c.status==='watch'?'Watch':'Breach';
+    return `<tr>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="badge badge-gray">${c.sector}</span></td>
+      <td class="num">KSh ${fmtK(c.rev)}</td>
+      <td class="num">KSh ${fmtK(c.ebitda)}</td>
+      <td class="num ${c.margin>=20?'positive':''}">${c.margin}%</td>
+      <td class="num ${c.yoy>=20?'positive':''}">↑ ${c.yoy}%</td>
+      <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══ P&L ═══
+function renderPL(){
+  const sel=document.getElementById('pl-company');
+  if(!sel.options.length||sel.options.length===1){
+    companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});
+  }
+  document.getElementById('pl-table').innerHTML=plLines.map(l=>{
+    const var_=l.fy24-l.fy23;
+    const varPct=((var_/Math.abs(l.fy23))*100).toFixed(1);
+    const isNeg=l.fy24<0;
+    const varColor=(!isNeg&&var_>0)||( isNeg&&var_<0)?'positive':'negative';
+    return `<tr style="${l.bold?'font-weight:600;':''} ${l.underline?'border-top:1px solid rgba(255,255,255,0.08);':''} ${l.color==='green'?'color:var(--green);':''}">
+      <td style="padding-left:${12+(l.indent||0)*16}px;${l.indent?'color:var(--muted);':''}">${l.item}</td>
+      <td class="num">${isNeg?'('+fmt(l.fy24)+')':fmt(l.fy24)}</td>
+      <td class="num" style="color:var(--muted);">${l.fy23<0?'('+fmt(l.fy23)+')':fmt(l.fy23)}</td>
+      <td class="num ${varColor}">${var_>0?'+':var_<0?'-':''}${fmt(var_)}</td>
+      <td class="num ${varColor}">${var_>0?'+':''}${varPct}%</td>
+    </tr>`;
+  }).join('');
+
+  // Waterfall
+  const wfData=[
+    {label:'Revenue',val:8421,color:'#c9a84c',type:'abs'},
+    {label:'COGS',val:-5053,color:'#f87171',type:'neg'},
+    {label:'Gross Profit',val:3369,color:'#60a5fa',type:'abs'},
+    {label:'OpEx',val:-1179,color:'#f87171',type:'neg'},
+    {label:'EBITDA',val:2190,color:'#3ecf8e',type:'abs'},
+    {label:'D&A+Tax',val:-1066,color:'#f87171',type:'neg'},
+    {label:'Net Profit',val:1125,color:'#c9a84c',type:'abs'},
+  ];
+  const maxW=Math.max(...wfData.map(d=>Math.abs(d.val)));
+  document.getElementById('waterfall').innerHTML=wfData.map(d=>`
+    <div class="wf-col">
+      <div class="wf-val" style="color:${d.color};">${d.val>0?'':'-'}${Math.abs(d.val)}M</div>
+      <div class="wf-bar" style="height:${Math.round((Math.abs(d.val)/maxW)*90)}px;background:${d.color};opacity:0.8;"></div>
+      <div class="wf-label">${d.label}</div>
+    </div>`).join('');
+}
+
+// ═══ CASH FLOW ═══
+function renderCashflow(){
+  document.getElementById('cf-table').innerHTML=cfWeeks.map(w=>{
+    const net=w.in-w.out;const closing=w.o+net;
+    const trendW=Math.round((net/50000)*50);
+    return `<tr>
+      <td>W${w.w}</td><td style="color:var(--muted);">${w.p}</td>
+      <td class="num">${fmt(w.o)}</td>
+      <td class="num positive">+${fmt(w.in)}</td>
+      <td class="num negative">(${fmt(w.out)})</td>
+      <td class="num ${net>0?'positive':'negative'}">${net>0?'+':''}${fmt(net)}</td>
+      <td class="num" style="color:var(--gold);">${fmt(closing)}</td>
+      <td><div style="height:6px;width:${Math.max(4,Math.abs(trendW))}px;background:${net>0?'var(--green)':'var(--red)'};border-radius:3px;"></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══ COMPANIES ═══
+function renderCompanies(){
+  const sel=document.getElementById('company-select');
+  if(sel.options.length<=1){companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o);});}
+}
+function renderCompanyDetail(){
+  const id=document.getElementById('company-select').value;
+  if(!id){document.getElementById('company-detail').innerHTML='<div style="text-align:center;padding:60px;color:var(--muted);">Select a company from the dropdown</div>';return;}
+  const c=companies.find(x=>x.id===id);
+  const statusBadge=c.status==='healthy'?'badge-green':c.status==='watch'?'badge-gold':'badge-red';
+  document.getElementById('company-detail').innerHTML=`
+    <div class="stats-row">
+      <div class="stat gold"><div class="stat-label">Revenue</div><div class="stat-value gold">KSh ${fmtK(c.rev)}</div><div class="stat-change up">↑ ${c.yoy}% YoY</div></div>
+      <div class="stat green"><div class="stat-label">EBITDA</div><div class="stat-value green">KSh ${fmtK(c.ebitda)}</div><div class="stat-change up">${c.margin}% margin</div></div>
+      <div class="stat blue"><div class="stat-label">Cash</div><div class="stat-value blue">KSh ${fmtK(c.cash)}</div></div>
+      <div class="stat red"><div class="stat-label">Debt</div><div class="stat-value red">KSh ${fmtK(c.debt)}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div><div class="panel-title">${c.name}</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">${c.sector} · ${c.geo} · ${c.stage} stage</div></div>
+        <span class="badge ${statusBadge}">${c.status==='healthy'?'Healthy':c.status==='watch'?'Watch':'Breach'}</span>
+      </div>
+      <div class="panel-body">
+        <div class="grid-3">
+          ${[['Revenue',c.rev],['EBITDA',c.ebitda],['Net Cash',c.cash-c.debt]].map(([l,v])=>`
+          <div style="background:var(--ink3);border-radius:8px;padding:12px;">
+            <div style="font-size:9px;color:var(--muted);margin-bottom:6px;">${l}</div>
+            <div style="font-size:16px;font-weight:500;color:${v<0?'var(--red)':'var(--gold)'};">KSh ${fmtK(Math.abs(v))}</div>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">EBITDA Margin</div>
+          <div class="chart-track" style="height:10px;"><div class="chart-bar" style="width:${c.margin*3}%;background:linear-gradient(to right,#c9a84c,#e8c96a);"></div></div>
+          <div style="font-size:11px;color:var(--gold);margin-top:4px;">${c.margin}%</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ═══ COVENANTS ═══
+function renderCovenants(){
+  document.getElementById('covenant-list').innerHTML=covenants.map(cv=>{
+    const color=cv.status==='ok'?'var(--green)':cv.status==='watch'?'var(--gold)':'var(--red)';
+    const badge=cv.status==='ok'?'badge-green':cv.status==='watch'?'badge-gold':'badge-red';
+    const label=cv.status==='ok'?'Compliant':cv.status==='watch'?'Watch':'BREACH';
+    return `<div class="covenant-item">
+      <div><div class="covenant-name">${cv.name}</div><div class="covenant-company">${cv.company}</div></div>
+      <div style="flex:1;margin:0 20px;">
+        <div class="chart-track"><div class="chart-bar" style="width:${Math.min(cv.pct,100)}%;background:${color};opacity:0.7;"></div></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:3px;">Threshold utilisation: ${cv.pct}%</div>
+      </div>
+      <div class="covenant-right">
+        <div class="covenant-val" style="color:${color};">${cv.current}</div>
+        <div class="covenant-threshold">Threshold: ${cv.threshold}</div>
+      </div>
+      <span class="badge ${badge}" style="margin-left:12px;">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══ SECTOR ═══
+function renderSector(){
+  const maxRev=Math.max(...sectors.map(s=>s.rev));
+  document.getElementById('sector-rev-chart').innerHTML=sectors.map(s=>`
+    <div class="chart-row">
+      <div class="chart-label" style="width:90px;">${s.name}</div>
+      <div class="chart-track"><div class="chart-bar" style="width:${Math.round((s.rev/maxRev)*100)}%;background:linear-gradient(to right,#c9a84c,#e8c96a);"></div></div>
+      <div class="chart-val">KSh ${fmtK(s.rev)}</div>
+    </div>`).join('');
+
+  document.getElementById('sector-margin-chart').innerHTML=sectors.map(s=>`
+    <div class="chart-row">
+      <div class="chart-label" style="width:90px;">${s.name}</div>
+      <div class="chart-track"><div class="chart-bar" style="width:${s.margin*3}%;background:linear-gradient(to right,#3ecf8e,#6ee7b7);"></div></div>
+      <div class="chart-val">${s.margin}%</div>
+    </div>`).join('');
+
+  const totalRev=sectors.reduce((s,x)=>s+x.rev,0);
+  document.getElementById('sector-table').innerHTML=sectors.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.cos}</td>
+      <td class="num">KSh ${fmtK(s.rev)}</td>
+      <td class="num">KSh ${fmtK(s.ebitda)}</td>
+      <td class="num ${s.margin>=20?'positive':''}">${s.margin}%</td>
+      <td class="num ${s.yoy>=20?'positive':''}">↑ ${s.yoy}%</td>
+      <td style="width:120px;">
+        <div class="chart-track"><div class="chart-bar" style="width:${Math.round((s.rev/totalRev)*100)}%;background:var(--gold);opacity:0.7;"></div></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px;">${Math.round((s.rev/totalRev)*100)}% of portfolio</div>
+      </td>
+    </tr>`).join('');
+}
+
+// ═══ INIT ═══
+renderExecutive();
+</script>
+</body>
+</html>

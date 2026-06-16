@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocuLens — Document Intelligence Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f8f7f4;--surface:#ffffff;--surface2:#f2f0ec;--surface3:#e8e5df;
+  --border:#e0ddd6;--border2:#ccc9c0;
+  --ink:#1a1a1a;--ink2:#2d2d2d;--muted:#6b6b6b;--muted2:#9a9a9a;
+  --accent:#1a1a1a;--accent2:#333;
+  --risk-high:#dc2626;--risk-high-bg:#fef2f2;--risk-high-border:#fecaca;
+  --risk-med:#d97706;--risk-med-bg:#fffbeb;--risk-med-border:#fde68a;
+  --risk-low:#059669;--risk-low-bg:#f0fdf4;--risk-low-border:#bbf7d0;
+  --extracted:#2563eb;--extracted-bg:#eff6ff;--extracted-border:#bfdbfe;
+  --font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;overflow:hidden;}
+.left-panel{width:300px;min-width:300px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.right-panel{flex:1;overflow-y:auto;background:var(--bg);}
+
+/* HEADER */
+.app-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.app-logo{font-size:15px;font-weight:600;color:var(--ink);}
+.app-logo span{font-family:var(--mono);color:var(--muted);font-size:12px;margin-left:6px;}
+.header-badge{font-size:10px;background:var(--ink);color:#fff;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
+
+/* LEFT PANEL */
+.panel-section{padding:14px 16px;border-bottom:1px solid var(--border);}
+.panel-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.doc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.doc-type-btn{padding:8px 6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--font);color:var(--muted);background:var(--bg);text-align:center;transition:all 0.15s;}
+.doc-type-btn:hover{border-color:var(--ink);color:var(--ink);}
+.doc-type-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.upload-zone{border:2px dashed var(--border2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:10px;}
+.upload-zone:hover{border-color:var(--ink);background:var(--surface2);}
+.upload-icon{font-size:24px;margin-bottom:6px;}
+.upload-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.sample-btn{width:100%;padding:9px;background:var(--ink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;transition:all 0.15s;}
+.sample-btn:hover{background:var(--accent2);}
+.sample-btn:disabled{background:var(--muted2);cursor:not-allowed;}
+
+/* PROGRESS */
+.progress-wrap{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.progress-step{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;color:var(--muted);}
+.progress-step.done{color:var(--ink);}
+.progress-step.active{color:var(--extracted);}
+.step-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;}
+.step-dot.done{background:var(--ink);border-color:var(--ink);color:#fff;}
+.step-dot.active{background:var(--extracted-bg);border-color:var(--extracted);color:var(--extracted);}
+.progress-bar-track{height:3px;background:var(--border);border-radius:2px;margin-top:8px;}
+.progress-bar-fill{height:100%;background:var(--ink);border-radius:2px;transition:width 0.4s ease;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+.stat-box{background:var(--surface);padding:12px 16px;}
+.stat-label{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;}
+.stat-val{font-size:18px;font-weight:600;color:var(--ink);}
+.stat-sub{font-size:10px;color:var(--muted2);margin-top:2px;}
+
+/* MAIN AREA */
+.main-area{padding:20px 24px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:600;color:var(--ink);}
+.section-count{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+/* TABS */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 18px;cursor:pointer;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.15s;font-weight:500;}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+
+/* CLAUSE CARDS */
+.clause-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;position:relative;}
+.clause-card:hover{border-color:var(--border2);}
+.clause-type{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-family:var(--mono);}
+.clause-value{font-size:13px;color:var(--ink);line-height:1.5;margin-bottom:8px;}
+.clause-source{font-size:11px;color:var(--muted2);font-style:italic;font-family:var(--mono);}
+.clause-actions{display:flex;gap:6px;margin-top:10px;}
+.clause-action-btn{padding:4px 10px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;font-family:var(--font);color:var(--muted);background:var(--bg);transition:all 0.15s;}
+.clause-action-btn:hover{border-color:var(--ink);color:var(--ink);}
+.clause-action-btn.accepted{background:var(--risk-low-bg);border-color:var(--risk-low-border);color:var(--risk-low);}
+.clause-action-btn.corrected{background:var(--extracted-bg);border-color:var(--extracted-border);color:var(--extracted);}
+.confidence-bar{position:absolute;top:0;right:0;bottom:0;width:3px;border-radius:0 8px 8px 0;}
+.conf-high{background:var(--risk-low);}
+.conf-med{background:var(--risk-med);}
+.conf-low{background:var(--risk-high);}
+
+/* RISK CARDS */
+.risk-card{border-radius:8px;padding:14px 16px;margin-bottom:10px;border:1px solid;}
+.risk-card.high{background:var(--risk-high-bg);border-color:var(--risk-high-border);}
+.risk-card.medium{background:var(--risk-med-bg);border-color:var(--risk-med-border);}
+.risk-card.low{background:var(--risk-low-bg);border-color:var(--risk-low-border);}
+.risk-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.risk-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono);}
+.risk-badge.high{background:var(--risk-high);color:#fff;}
+.risk-badge.medium{background:var(--risk-med);color:#fff;}
+.risk-badge.low{background:var(--risk-low);color:#fff;}
+.risk-title{font-size:13px;font-weight:600;color:var(--ink);}
+.risk-desc{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:8px;}
+.risk-clause{font-size:11px;font-family:var(--mono);color:var(--muted);background:rgba(0,0,0,0.04);padding:6px 8px;border-radius:4px;border-left:2px solid currentColor;}
+.risk-clause.high{color:var(--risk-high);}
+.risk-clause.medium{color:var(--risk-med);}
+
+/* SUMMARY */
+.summary-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;}
+.summary-text{font-size:13px;color:var(--ink2);line-height:1.7;}
+.key-terms{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.key-term{font-size:11px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 9px;color:var(--ink);font-family:var(--mono);}
+
+/* DOCUMENT VIEWER */
+.doc-viewer{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;font-size:12px;line-height:1.8;color:var(--ink2);font-family:var(--mono);max-height:400px;overflow-y:auto;}
+.doc-highlight{background:#fef9c3;border-bottom:2px solid #eab308;cursor:pointer;transition:background 0.2s;}
+.doc-highlight:hover{background:#fef08a;}
+.doc-highlight.risk{background:#fee2e2;border-bottom-color:var(--risk-high);}
+.doc-section-head{font-weight:600;color:var(--ink);font-size:13px;margin:12px 0 6px;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-title{font-size:15px;font-weight:600;color:var(--ink2);margin-bottom:6px;}
+.empty-sub{font-size:12px;line-height:1.6;}
+
+/* LOADING */
+.thinking{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.thinking-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite;}
+.thinking-dots span:nth-child(2){animation-delay:0.2s;}
+.thinking-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,80%,100%{opacity:0;}40%{opacity:1;}}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);}
+.badge-blue{background:var(--extracted-bg);color:var(--extracted);}
+.badge-gray{background:var(--surface2);color:var(--muted);}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <div class="app-header">
+    <div class="app-logo">DocuLens <span>v2.1</span></div>
+    <div class="header-badge">AI-Powered</div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-label">Document Type</div>
+    <div class="doc-type-grid" id="doc-type-grid">
+      <button class="doc-type-btn active" onclick="setDocType('nda',this)">NDA</button>
+      <button class="doc-type-btn" onclick="setDocType('saas',this)">SaaS Agreement</button>
+      <button class="doc-type-btn" onclick="setDocType('employment',this)">Employment</button>
+      <button class="doc-type-btn" onclick="setDocType('vendor',this)">Vendor</button>
+      <button class="doc-type-btn" onclick="setDocType('loan',this)">Loan Agreement</button>
+      <button class="doc-type-btn" onclick="setDocType('lease',this)">Lease</button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-label">Upload Contract</div>
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📄</div>
+      <div class="upload-text">Drag & drop PDF or Word document<br><span style="color:var(--muted2);font-size:11px;">or click to browse</span></div>
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx" style="display:none;">
+    </div>
+    <button class="sample-btn" id="analyze-btn" onclick="runAnalysis()">⚡ Analyse Sample Contract</button>
+  </div>
+
+  <div class="panel-section" id="progress-section" style="display:none;">
+    <div class="panel-label">Processing</div>
+    <div id="steps-container"></div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="panel-section" style="flex:1;">
+    <div class="panel-label">About</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.7;">
+      AI-powered contract review that extracts key clauses, flags risks, and summarises obligations in seconds.<br><br>
+      <strong style="color:var(--ink);">Supported:</strong> NDA, SaaS, Employment, Vendor, Loan, Lease, IP Assignment<br><br>
+      <strong style="color:var(--ink);">Languages:</strong> English, French, Arabic, Swahili, Portuguese, Spanish
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel" id="right-panel">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">🔍</div>
+    <div class="empty-title">No document loaded</div>
+    <div class="empty-sub">Select a document type and click<br>"Analyse Sample Contract" to see the AI in action</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ═══ CONTRACT DATA ═══
+const contracts = {
+  nda: {
+    name: 'Mutual Non-Disclosure Agreement',
+    parties: 'Acacia Ventures Ltd & Savanna Tech Solutions',
+    date: '15 January 2025',
+    pages: 8,
+    words: 2840,
+    type: 'NDA',
+    summary: `This Mutual Non-Disclosure Agreement establishes confidentiality obligations between Acacia Ventures Ltd ("Discloser") and Savanna Tech Solutions ("Recipient") in connection with a proposed commercial partnership. Both parties agree to protect each other's proprietary information for a period of 3 years. Key concerns include an unusually broad definition of Confidential Information that may capture publicly available data, and a unilateral carve-out favouring Acacia Ventures in clause 4.3.`,
+    keyTerms: ['3-year term','Mutual obligations','Kenya governing law','30-day breach notice','Nairobi arbitration'],
+    clauses: [
+      {type:'Parties',value:'Acacia Ventures Ltd (Company No. PVT-2019-04821) and Savanna Tech Solutions Ltd (Company No. PVT-2021-09934)',source:'Clause 1.1',conf:'high'},
+      {type:'Effective Date',value:'15 January 2025',source:'Preamble',conf:'high'},
+      {type:'Confidentiality Term',value:'3 years from the Effective Date',source:'Clause 3.1',conf:'high'},
+      {type:'Definition of Confidential Information',value:'Any information, whether oral, written or electronic, disclosed by either party, including but not limited to business plans, financial data, customer lists, trade secrets, and any information marked as confidential.',source:'Clause 2.1',conf:'high'},
+      {type:'Permitted Disclosures',value:'Employees and advisors with a need to know, subject to equivalent confidentiality obligations',source:'Clause 4.1',conf:'high'},
+      {type:'Governing Law',value:'Laws of the Republic of Kenya',source:'Clause 9.1',conf:'high'},
+      {type:'Dispute Resolution',value:'Nairobi Centre for International Arbitration (NCIA), single arbitrator, English language',source:'Clause 9.2',conf:'high'},
+      {type:'Notice Period for Breach',value:'30 days written notice before commencing arbitration',source:'Clause 8.3',conf:'med'},
+      {type:'Exclusions from Confidentiality',value:'Information independently developed, already in public domain, or received from third party without restriction',source:'Clause 2.3',conf:'high'},
+      {type:'Return of Information',value:'Within 14 days of written request or termination of Agreement',source:'Clause 6.1',conf:'med'},
+    ],
+    risks: [
+      {level:'high',title:'Overly broad definition of Confidential Information',desc:'Clause 2.1 captures "any information... disclosed by either party" without meaningful limitation. This could inadvertently cover publicly available information and creates enforcement ambiguity. Standard NDA practice limits scope to information marked confidential or described as such at time of disclosure.',clause:'Clause 2.1: "...including but not limited to... any information disclosed by either party in any form..."'},
+      {level:'high',title:'Unilateral carve-out in Clause 4.3',desc:'Clause 4.3 grants Acacia Ventures the right to disclose Confidential Information to potential investors and acquirers without prior notice to Savanna Tech. This carve-out is one-sided and not reciprocal, creating significant asymmetry in an otherwise mutual agreement.',clause:'Clause 4.3: "Acacia Ventures may disclose Confidential Information to bona fide investors..."'},
+      {level:'medium',title:'Survival clause missing post-termination obligations',desc:'The agreement does not specify which obligations survive termination beyond the return of information. Industry standard is to include at minimum a 2-year survival period for confidentiality obligations post-termination.',clause:'Clause 7.2: "This Agreement shall terminate upon written notice by either party..."'},
+      {level:'medium',title:'No liquidated damages provision',desc:'The agreement relies solely on injunctive relief as a remedy, with no liquidated damages clause. This may make enforcement costly and uncertain under Kenyan law where quantifying damages from NDA breach can be difficult.',clause:'Clause 8.1: "The parties acknowledge that breach may cause irreparable harm..."'},
+      {level:'low',title:'Arbitration seat not clearly defined',desc:'Clause 9.2 specifies NCIA arbitration but does not clearly state the seat of arbitration. While Nairobi is implied, ambiguity on the seat affects which courts have supervisory jurisdiction.',clause:'Clause 9.2: "Disputes shall be resolved by arbitration under the NCIA Rules..."'},
+    ],
+    docText: `MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement (the "Agreement") is entered into as of 15 January 2025 between Acacia Ventures Ltd, a company incorporated under the laws of Kenya (Company No. PVT-2019-04821) ("Acacia"), and Savanna Tech Solutions Ltd (Company No. PVT-2021-09934) ("Savanna").
+
+1. PURPOSE
+The parties wish to explore a potential commercial partnership and may disclose Confidential Information to each other in connection with this purpose.
+
+2. DEFINITION OF CONFIDENTIAL INFORMATION
+2.1 "Confidential Information" means any information, whether oral, written or electronic, disclosed by either party, including but not limited to business plans, financial data, customer lists, trade secrets, and any information disclosed by either party in any form whatsoever.
+
+2.3 Confidential Information does not include information that: (a) is or becomes publicly available through no breach of this Agreement; (b) was independently developed by the Recipient; or (c) was received from a third party without restriction.
+
+3. CONFIDENTIALITY OBLIGATIONS
+3.1 Each party agrees to keep the other's Confidential Information strictly confidential for a period of three (3) years from the Effective Date.
+
+4. PERMITTED DISCLOSURES
+4.1 Each party may disclose Confidential Information to its employees and professional advisors who have a need to know and are bound by equivalent confidentiality obligations.
+
+4.3 Acacia Ventures may disclose Confidential Information to bona fide investors, acquirers or financing parties in connection with any fundraising or corporate transaction, without prior notice to Savanna.
+
+6. RETURN OF INFORMATION
+6.1 Upon written request or termination of this Agreement, each party shall return or destroy all Confidential Information within fourteen (14) days.
+
+7. TERM AND TERMINATION
+7.2 This Agreement shall terminate upon thirty (30) days written notice by either party.
+
+8. REMEDIES
+8.1 The parties acknowledge that breach of this Agreement may cause irreparable harm for which monetary damages would be an inadequate remedy, and injunctive relief may be sought.
+
+8.3 Before commencing arbitration, the aggrieved party shall provide thirty (30) days written notice of the alleged breach.
+
+9. GOVERNING LAW AND DISPUTE RESOLUTION
+9.1 This Agreement shall be governed by the laws of the Republic of Kenya.
+9.2 Disputes shall be resolved by arbitration under the NCIA Rules, with a single arbitrator, conducted in the English language.`
+  },
+
+  saas: {
+    name: 'Software as a Service Agreement',
+    parties: 'CloudBase Africa Ltd & Meridian Group Kenya',
+    date: '3 March 2025',
+    pages: 24,
+    words: 8420,
+    type: 'SaaS Agreement',
+    summary: `This SaaS Agreement governs CloudBase Africa's provision of its cloud ERP platform to Meridian Group Kenya for a 24-month initial term. The agreement includes standard uptime SLAs (99.5%), data processing terms, and IP ownership provisions. Key risks include a liability cap that is lower than industry standard, an auto-renewal clause with insufficient notice period, and a data portability provision that imposes unreasonable export timelines.`,
+    keyTerms: ['24-month term','99.5% uptime SLA','Auto-renewal 60 days','KES 480K/year','Kenya data residency'],
+    clauses: [
+      {type:'Parties',value:'CloudBase Africa Ltd (Provider) and Meridian Group Kenya Ltd (Customer)',source:'Clause 1',conf:'high'},
+      {type:'Initial Term',value:'24 months from Go-Live Date',source:'Clause 3.1',conf:'high'},
+      {type:'Annual Subscription Fee',value:'KES 480,000 per annum, payable quarterly in advance',source:'Clause 5.1',conf:'high'},
+      {type:'Uptime SLA',value:'99.5% monthly uptime, excluding scheduled maintenance',source:'Clause 7.1',conf:'high'},
+      {type:'Auto-Renewal',value:'Automatically renews for 12-month periods unless 60 days notice given',source:'Clause 3.2',conf:'high'},
+      {type:'Liability Cap',value:'Aggregate liability limited to fees paid in the preceding 3 months',source:'Clause 11.2',conf:'high'},
+      {type:'Data Residency',value:'All customer data stored on servers located in Kenya or East Africa',source:'Clause 8.3',conf:'high'},
+      {type:'IP Ownership',value:'Customer retains ownership of all Customer Data; Provider owns the Platform',source:'Clause 9.1',conf:'high'},
+      {type:'Data Export on Termination',value:'Customer data exported within 90 days of termination',source:'Clause 12.4',conf:'med'},
+      {type:'Governing Law',value:'Laws of Kenya; High Court of Nairobi has exclusive jurisdiction',source:'Clause 14.1',conf:'high'},
+    ],
+    risks: [
+      {level:'high',title:'Liability cap significantly below industry standard',desc:'Clause 11.2 caps aggregate liability at 3 months of fees (KES 120,000). Industry standard for SaaS agreements is 12 months of fees. Given the ERP system\'s role in business-critical operations, a KES 120,000 cap may be wholly inadequate to cover actual losses from a serious outage or data breach.',clause:'Clause 11.2: "...aggregate liability shall not exceed fees paid in the three (3) months preceding the claim..."'},
+      {level:'high',title:'Auto-renewal notice period insufficient',desc:'60 days notice to cancel auto-renewal is shorter than industry standard (90 days) and may catch customers unaware, particularly given that procurement and budget cycles in Kenyan enterprises typically require 90+ days lead time.',clause:'Clause 3.2: "...unless either party provides sixty (60) days written notice prior to renewal..."'},
+      {level:'medium',title:'Data export timeline of 90 days is unreasonable',desc:'Clause 12.4 gives the Provider 90 days to export customer data post-termination. This is excessive — industry standard is 30 days. During this period, the customer is effectively locked in and may face operational disruption if migrating to an alternative platform.',clause:'Clause 12.4: "Provider shall make Customer Data available for export within ninety (90) days..."'},
+      {level:'low',title:'SLA credit mechanism not defined',desc:'Clause 7.1 commits to 99.5% uptime but does not define the credit mechanism for SLA breaches. The agreement should specify the credit percentage per hour of downtime and the process for claiming credits.',clause:'Clause 7.1: "Provider shall use commercially reasonable efforts to achieve 99.5% monthly uptime..."'},
+    ],
+    docText: `SOFTWARE AS A SERVICE AGREEMENT
+
+This SaaS Agreement is entered into between CloudBase Africa Ltd ("Provider") and Meridian Group Kenya Ltd ("Customer") as of 3 March 2025.
+
+3. TERM
+3.1 Initial Term: This Agreement commences on the Go-Live Date and continues for twenty-four (24) months.
+3.2 Auto-Renewal: Upon expiry of the Initial Term, this Agreement automatically renews for successive 12-month periods unless either party provides sixty (60) days written notice prior to renewal.
+
+5. FEES
+5.1 The Customer shall pay an annual subscription fee of KES 480,000, payable quarterly in advance.
+
+7. SERVICE LEVELS
+7.1 Provider shall use commercially reasonable efforts to achieve 99.5% monthly uptime, excluding scheduled maintenance windows.
+
+8. DATA
+8.3 All Customer Data shall be stored on servers physically located in Kenya or East Africa.
+
+9. INTELLECTUAL PROPERTY
+9.1 Customer retains full ownership of all Customer Data. Provider owns the Platform and all related IP.
+
+11. LIABILITY
+11.2 Provider's aggregate liability under this Agreement shall not exceed the fees paid by Customer in the three (3) months preceding the relevant claim.
+
+12. TERMINATION
+12.4 Upon termination, Provider shall make all Customer Data available for export in a standard format within ninety (90) days.
+
+14. GOVERNING LAW
+14.1 This Agreement is governed by the laws of Kenya. The High Court of Nairobi shall have exclusive jurisdiction.`
+  },
+
+  employment: {
+    name: 'Senior Employment Contract',
+    parties: 'Rift Valley Holdings Ltd & David Omondi Otieno',
+    date: '1 February 2025',
+    pages: 12,
+    words: 4100,
+    type: 'Employment Contract',
+    summary: `This employment contract engages David Omondi Otieno as Head of Operations at Rift Valley Holdings Ltd, effective 1 February 2025. The contract includes a KES 280,000 gross monthly salary, performance bonus, and standard benefits. Key risks include a post-employment non-compete clause that may be unenforceable under Kenyan law, an ambiguous IP assignment provision, and a termination clause with notice periods below industry standard for senior roles.`,
+    keyTerms: ['KES 280K/month','3-month notice','12-month non-compete','Annual bonus 20%','NSSF/NHIF included'],
+    clauses: [
+      {type:'Employee',value:'David Omondi Otieno, National ID No. 28441072',source:'Clause 1',conf:'high'},
+      {type:'Position',value:'Head of Operations',source:'Clause 2.1',conf:'high'},
+      {type:'Commencement Date',value:'1 February 2025',source:'Clause 2.2',conf:'high'},
+      {type:'Gross Monthly Salary',value:'KES 280,000 per month, subject to statutory deductions',source:'Clause 4.1',conf:'high'},
+      {type:'Annual Performance Bonus',value:'Up to 20% of annual gross salary, at employer\'s discretion',source:'Clause 4.3',conf:'high'},
+      {type:'Notice Period',value:'3 months written notice by either party',source:'Clause 7.1',conf:'high'},
+      {type:'Non-Compete Period',value:'12 months post-employment within East Africa',source:'Clause 9.1',conf:'high'},
+      {type:'Annual Leave',value:'25 working days per year',source:'Clause 5.2',conf:'high'},
+      {type:'IP Assignment',value:'All work product created during employment assigned to Employer',source:'Clause 10.1',conf:'med'},
+      {type:'Governing Law',value:'Employment Act 2007 (Kenya) and Laws of Kenya',source:'Clause 13',conf:'high'},
+    ],
+    risks: [
+      {level:'high',title:'Non-compete clause likely unenforceable',desc:'Clause 9.1 imposes a 12-month non-compete covering all of East Africa. Kenyan courts have consistently held that overly broad non-compete clauses are unenforceable restraints of trade. To be enforceable, the clause should be limited to specific competitors, a defined geographic area, and a shorter period (typically 6 months).',clause:'Clause 9.1: "Employee shall not engage in any competing business within East Africa for 12 months post-employment..."'},
+      {level:'medium',title:'IP assignment clause is overbroad',desc:'Clause 10.1 assigns all work product to the employer without distinguishing between work created during working hours using company resources versus personal projects. This could inadvertently capture the employee\'s pre-existing IP or personal projects unrelated to the business.',clause:'Clause 10.1: "All inventions, works and developments created by Employee shall be the sole property of Employer..."'},
+      {level:'medium',title:'Bonus discretion not sufficiently defined',desc:'The 20% annual bonus is described as payable "at employer\'s discretion" with no performance metrics or payment timeline specified. This creates uncertainty and potential disputes. Industry standard is to link bonuses to defined KPIs.',clause:'Clause 4.3: "...annual bonus of up to 20% at the sole discretion of the Employer..."'},
+      {level:'low',title:'No garden leave provision',desc:'Despite a 3-month notice period, there is no garden leave clause allowing the employer to place the employee on paid leave during the notice period. This is a gap for a senior role with access to sensitive commercial information.',clause:'Clause 7.1: "Either party may terminate this Agreement by giving three (3) months written notice..."'},
+    ],
+    docText: `EMPLOYMENT CONTRACT
+
+This Contract of Employment is made between Rift Valley Holdings Ltd ("Employer") and David Omondi Otieno, National ID No. 28441072 ("Employee").
+
+2. APPOINTMENT
+2.1 The Employee is appointed as Head of Operations.
+2.2 The employment commences on 1 February 2025.
+
+4. REMUNERATION
+4.1 The Employee shall receive a gross monthly salary of KES 280,000, subject to statutory deductions including PAYE, NSSF and NHIF.
+4.3 The Employee may receive an annual performance bonus of up to 20% of annual gross salary at the sole discretion of the Employer.
+
+5. LEAVE
+5.2 The Employee is entitled to 25 working days of annual leave per calendar year.
+
+7. TERMINATION
+7.1 Either party may terminate this Agreement by giving three (3) months written notice to the other party.
+
+9. NON-COMPETITION
+9.1 The Employee shall not, for a period of 12 months following termination, engage in any business that competes with the Employer within East Africa.
+
+10. INTELLECTUAL PROPERTY
+10.1 All inventions, works, developments and improvements created by the Employee during the course of employment shall be the sole property of the Employer.
+
+13. GOVERNING LAW
+This Contract is governed by the Employment Act 2007 and the Laws of Kenya.`
+  },
+};
+
+// ═══ STATE ═══
+let currentDocType = 'nda';
+let analysisRunning = false;
+let currentTab = 'summary';
+
+// ═══ DOC TYPE ═══
+function setDocType(type, btn) {
+  currentDocType = type;
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Reset
+  document.getElementById('right-panel').innerHTML = `<div class="empty-state" id="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No document loaded</div><div class="empty-sub">Click "Analyse Sample Contract" to analyse a ${type.toUpperCase()} document</div></div>`;
+  document.getElementById('progress-section').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = false;
+  document.getElementById('analyze-btn').textContent = '⚡ Analyse Sample Contract';
+}
+
+// ═══ ANALYSIS ═══
+const steps = [
+  'Parsing document structure...',
+  'Identifying clause boundaries...',
+  'Extracting key provisions...',
+  'Running risk analysis...',
+  'Generating summary...',
+  'Complete'
+];
+
+async function runAnalysis() {
+  if (analysisRunning) return;
+  const contract = contracts[currentDocType];
+  if (!contract) {
+    alert('Demo coming soon for this document type. Try NDA, SaaS Agreement, or Employment Contract.');
+    return;
+  }
+  analysisRunning = true;
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="thinking">Processing <span class="thinking-dots"><span></span><span></span><span></span></span></span>';
+
+  // Show progress
+  const prog = document.getElementById('progress-section');
+  prog.style.display = 'block';
+  const stepsContainer = document.getElementById('steps-container');
+
+  for (let i = 0; i < steps.length; i++) {
+    stepsContainer.innerHTML = steps.map((s, j) => `
+      <div class="progress-step ${j < i ? 'done' : j === i ? 'active' : ''}">
+        <div class="step-dot ${j < i ? 'done' : j === i ? 'active' : ''}">
+          ${j < i ? '✓' : j === i ? '→' : ''}
+        </div>
+        ${s}
+      </div>`).join('');
+    document.getElementById('progress-bar').style.width = `${Math.round(((i + 1) / steps.length) * 100)}%`;
+    await delay(i === 0 ? 600 : i === 3 ? 900 : 500);
+  }
+
+  await delay(300);
+  prog.style.display = 'none';
+  renderResults(contract);
+  btn.textContent = '⟳ Re-analyse';
+  btn.disabled = false;
+  analysisRunning = false;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ═══ RENDER RESULTS ═══
+function renderResults(contract) {
+  const highRisks = contract.risks.filter(r => r.level === 'high').length;
+  const medRisks = contract.risks.filter(r => r.level === 'medium').length;
+  const lowRisks = contract.risks.filter(r => r.level === 'low').length;
+
+  document.getElementById('right-panel').innerHTML = `
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-label">Document</div><div class="stat-val" style="font-size:13px;margin-top:2px;">${contract.name}</div><div class="stat-sub">${contract.pages} pages · ${contract.words.toLocaleString()} words</div></div>
+      <div class="stat-box"><div class="stat-label">Clauses Extracted</div><div class="stat-val">${contract.clauses.length}</div><div class="stat-sub">95% avg confidence</div></div>
+      <div class="stat-box"><div class="stat-label">Risk Flags</div><div class="stat-val" style="color:${highRisks>0?'var(--risk-high)':'var(--ink)'};">${contract.risks.length}</div><div class="stat-sub">${highRisks} high · ${medRisks} medium · ${lowRisks} low</div></div>
+      <div class="stat-box"><div class="stat-label">Review Time</div><div class="stat-val">~28 min</div><div class="stat-sub">vs 3–4 hrs manually</div></div>
+    </div>
+    <div class="main-area">
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('summary',this)">Summary</div>
+        <div class="tab" onclick="switchTab('clauses',this)">Extracted Clauses <span class="badge badge-gray">${contract.clauses.length}</span></div>
+        <div class="tab" onclick="switchTab('risks',this)">Risk Flags <span class="badge" style="background:var(--risk-high-bg);color:var(--risk-high);">${contract.risks.length}</span></div>
+        <div class="tab" onclick="switchTab('document',this)">Document View</div>
+      </div>
+      <div id="tab-content"></div>
+    </div>`;
+
+  currentTab = 'summary';
+  renderTab('summary', contract);
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = tab;
+  const contract = contracts[currentDocType];
+  renderTab(tab, contract);
+}
+
+function renderTab(tab, contract) {
+  const el = document.getElementById('tab-content');
+  if (tab === 'summary') {
+    el.innerHTML = `
+      <div class="summary-box">
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:var(--mono);">AI Summary</div>
+        <div class="summary-text">${contract.summary}</div>
+        <div class="key-terms">${contract.keyTerms.map(t => `<span class="key-term">${t}</span>`).join('')}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div class="summary-box">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:var(--mono);">Parties</div>
+          <div style="font-size:13px;color:var(--ink2);">${contract.parties}</div>
+          <div class="divider"></div>
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;font-family:var(--mono);">Effective Date</div>
+          <div style="font-size:13px;color:var(--ink2);">${contract.date}</div>
+        </div>
+        <div class="summary-box">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:var(--mono);">Risk Overview</div>
+          ${contract.risks.map(r => `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+              <span class="risk-badge ${r.level}">${r.level}</span>
+              <span style="font-size:12px;color:var(--ink2);">${r.title}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else if (tab === 'clauses') {
+    el.innerHTML = `
+      <div class="section-header"><div class="section-title">Extracted Clauses</div><div class="section-count">${contract.clauses.length} provisions identified · click Accept or Correct</div></div>
+      ${contract.clauses.map((c, i) => `
+        <div class="clause-card" id="clause-${i}">
+          <div class="confidence-bar ${c.conf === 'high' ? 'conf-high' : c.conf === 'med' ? 'conf-med' : 'conf-low'}"></div>
+          <div class="clause-type">${c.type}</div>
+          <div class="clause-value">${c.value}</div>
+          <div class="clause-source">📍 ${c.source} · ${c.conf === 'high' ? '97%' : c.conf === 'med' ? '84%' : '71%'} confidence</div>
+          <div class="clause-actions">
+            <button class="clause-action-btn" id="acc-${i}" onclick="acceptClause(${i})">✓ Accept</button>
+            <button class="clause-action-btn" id="cor-${i}" onclick="correctClause(${i})">✎ Correct</button>
+          </div>
+        </div>`).join('')}`;
+  } else if (tab === 'risks') {
+    el.innerHTML = `
+      <div class="section-header"><div class="section-title">Risk Flags</div><div class="section-count">${contract.risks.filter(r=>r.level==='high').length} high · ${contract.risks.filter(r=>r.level==='medium').length} medium · ${contract.risks.filter(r=>r.level==='low').length} low</div></div>
+      ${contract.risks.map(r => `
+        <div class="risk-card ${r.level}">
+          <div class="risk-header">
+            <span class="risk-badge ${r.level}">${r.level} risk</span>
+            <div class="risk-title">${r.title}</div>
+          </div>
+          <div class="risk-desc">${r.desc}</div>
+          <div class="risk-clause ${r.level}">${r.clause}</div>
+        </div>`).join('')}`;
+  } else if (tab === 'document') {
+    const highlighted = contract.docText
+      .replace(/Clause 2\.1[^""]*/g, m => `<span class="doc-highlight risk" title="Risk flagged">${m}</span>`)
+      .replace(/Clause 4\.3[^""]*/g, m => `<span class="doc-highlight risk" title="Risk flagged">${m}</span>`)
+      .replace(/Clause 11\.2[^""]*/g, m => `<span class="doc-highlight risk" title="Risk flagged">${m}</span>`)
+      .replace(/Clause 9\.1[^""]*/g, m => `<span class="doc-highlight risk" title="Risk flagged">${m}</span>`)
+      .replace(/\n([A-Z][A-Z\s]+)\n/g, '\n<div class="doc-section-head">$1</div>\n')
+      .replace(/\n/g, '<br>');
+    el.innerHTML = `
+      <div class="section-header">
+        <div class="section-title">Document View</div>
+        <div class="section-count"><span style="display:inline-block;width:10px;height:10px;background:#fee2e2;border:1px solid var(--risk-high);border-radius:2px;margin-right:4px;"></span>highlighted = risk flagged</div>
+      </div>
+      <div class="doc-viewer">${highlighted}</div>`;
+  }
+}
+
+function acceptClause(i) {
+  const btn = document.getElementById(`acc-${i}`);
+  btn.classList.add('accepted');
+  btn.textContent = '✓ Accepted';
+  document.getElementById(`cor-${i}`).style.display = 'none';
+}
+function correctClause(i) {
+  const btn = document.getElementById(`cor-${i}`);
+  btn.classList.add('corrected');
+  btn.textContent = '✎ Marked for correction';
+}
+
+// ═══ INIT ═══
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  if (e.target.files[0]) {
+    document.getElementById('analyze-btn').textContent = `⚡ Analyse "${e.target.files[0].name}"`;
+  }
+});
+</script>
+</body>
+</html>
