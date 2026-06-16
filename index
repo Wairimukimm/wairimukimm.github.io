@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wairimu Kimani| Data Scientist</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; }
+    header { background: #161b22; padding: 60px 40px; text-align: center; border-bottom: 1px solid #30363d; }
+    header h1 { font-size: 2.4rem; color: #58a6ff; }
+    header p { margin-top: 10px; color: #8b949e; font-size: 1.1rem; }
+    .badges { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .badge { background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #58a6ff; text-decoration: none; }
+    .badge:hover { background: #58a6ff; color: #0d1117; }
+    section { max-width: 1000px; margin: 50px auto; padding: 0 24px; }
+    h2 { color: #58a6ff; font-size: 1.4rem; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
+    .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
+    .tag { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 5px 14px; font-size: 0.82rem; color: #79c0ff; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 22px; transition: border-color 0.2s; }
+    .card:hover { border-color: #58a6ff; }
+    .card h3 { color: #e6edf3; margin-bottom: 8px; font-size: 1rem; }
+    .card p { color: #8b949e; font-size: 0.85rem; line-height: 1.5; margin-bottom: 14px; }
+    .card a { color: #58a6ff; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+    .card a:hover { text-decoration: underline; }
+    .articles { display: flex; flex-direction: column; gap: 14px; }
+    .article { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px 22px; }
+    .article a { color: #79c0ff; text-decoration: none; font-size: 0.95rem; }
+    .article a:hover { text-decoration: underline; }
+    footer { text-align: center; padding: 40px; color: #484f58; font-size: 0.85rem; border-top: 1px solid #21262d; margin-top: 60px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>👋 Hi, I'm Wairimu</h1>
+  <p>Data Scientist & ML Engineer · Nairobi, Kenya</p>
+  <p style="margin-top:8px; color:#8b949e; max-width:600px; margin-inline:auto; font-size:0.95rem;">
+    Transforming raw data into decisions. Building ML models, AI automation, and data products for African markets.
+  </p>
+  <div class="badges">
+    <a href="https://www.linkedin.com/in/priscillah-wairimu-99b75a1b1/" target="_blank" class="badge">🔗 LinkedIn</a>
+    <a href="https://medium.com/@pwairimu046" target="_blank" class="badge">✍️ Medium</a>
+    <a href="mailto:pwairimu046@gmail.com" class="badge">📧 Email</a>
+  </div>
+</header>
+
+<section>
+  <h2>🛠 Tech Stack</h2>
+  <div class="stack">
+    <span class="tag">Python</span><span class="tag">SQL</span><span class="tag">R</span>
+    <span class="tag">Machine Learning</span><span class="tag">XGBoost</span><span class="tag">LightGBM</span>
+    <span class="tag">Time Series (ARIMA)</span><span class="tag">NLP</span>
+    <span class="tag">Firebase</span><span class="tag">FastAPI</span><span class="tag">Streamlit</span>
+    <span class="tag">AWS</span><span class="tag">Docker</span><span class="tag">Google Earth Engine</span>
+    <span class="tag">Claude API</span><span class="tag">Zapier</span>
+  </div>
+
+  <h2>📂 Projects</h2>
+  <div class="cards">
+
+    <div class="card">
+      <h3>📊 Carbon Credits Timeseries Analysis</h3>
+      <p>ARIMA & ETS forecasting on global CO₂ emissions and carbon offset credits. Includes ADF testing, correlation analysis, and trend visualisation.</p>
+      <a href="Carbon_credits_presentation.pdf" target="_blank">View Presentation →</a>
+    </div>
+
+    <div class="card">
+      <h3>⏱ Overtime Tracker</h3>
+      <p>Interactive HR tool for logging, calculating, and visualising employee overtime hours.</p>
+      <a href="overtime-tracker-v2.html" target="_blank">Open Tool →</a>
+    </div>
+
+    <div class="card">
+      <h3>🛒 Retail Analytics Dashboard</h3>
+      <p>Sales trends, inventory, and performance analytics for retail operations.</p>
+      <a href="retail-analytics-dashboard__2_.html" target="_blank">Open Dashboard →</a>
+    </div>
+
+    <div class="card">
+      <h3>💰 Financial Reporting Suite</h3>
+      <p>End-to-end financial reporting with KPI tracking and period comparisons.</p>
+      <a href="financial-reporting-suite.html" target="_blank">Open Tool →</a>
+    </div>
+
+    <div class="card">
+      <h3>💸 Expenses Tracker</h3>
+      <p>Personal and business expense tracking with category breakdowns and visual summaries.</p>
+      <a href="expenses-tracker.html" target="_blank">Open Tracker →</a>
+    </div>
+
+    <div class="card">
+      <h3>🤖 Document Intelligence Bot</h3>
+      <p>AI-powered document analysis — extract insights from PDFs and text using NLP.</p>
+      <a href="document-intelligence-bot.html" target="_blank">Open Bot →</a>
+    </div>
+
+    <div class="card">
+      <h3>📈 Demand Forecasting Engine</h3>
+      <p>ML-driven demand forecasting for inventory and supply chain optimisation.</p>
+      <a href="demand-forecasting-engine.html" target="_blank">Open Engine →</a>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>✍️ Latest Articles</h2>
+  <div class="articles">
+    <div class="article">
+      <a href="https://medium.com/@pwairimu046/navigating-the-ethical-landscape-of-artificial-intelligence-3b9d79da7da3" target="_blank">
+        Ethics in AI: Navigating the Ethical Landscape of Artificial Intelligence →
+      </a>
+    </div>
+    <div class="article">
+      <a href="https://medium.com/@pwairimu046/navigating-vecm-time-series-baaaea568485" target="_blank">
+        VECM Time Series: A Deep Dive →
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Built with GitHub Pages · Priscillah Wairimu © 2026
+</footer>
+
+</body>
+</html>
