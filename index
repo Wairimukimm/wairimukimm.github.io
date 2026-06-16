@@ -109,13 +109,17 @@
   <h2>✍️ Latest Articles</h2>
   <div class="articles">
     <div class="article">
-      <a href="https://medium.com/@pwairimu046/navigating-the-ethical-landscape-of-artificial-intelligence-3b9d79da7da3" target="_blank">
-        Ethics in AI: Navigating the Ethical Landscape of Artificial Intelligence →
+      <a href="https://medium.com/@pwairimu046/backpropagation-isnt-magic-it-s-just-the-chain-rule-applied-relentlessly-b6b5576f73f4" target="_blank">
+        Backpropagation Isn’t Magic. It’s Just the Chain Rule, Applied Relentlessly. →
+      </a>
+    <div class="article">
+      <a href="https://medium.com/@pwairimu046/when-quantum-meets-ai-things-get-strange-fast-b26d34c25535" target="_blank">
+        When Quantum Meets AI, Things Get Strange Fast →
       </a>
     </div>
     <div class="article">
-      <a href="https://medium.com/@pwairimu046/navigating-vecm-time-series-baaaea568485" target="_blank">
-        VECM Time Series: A Deep Dive →
+      <a href="https://medium.com/@pwairimu046/what-happens-when-ai-trains-on-ai-a115e768058e" target="_blank">
+        What Happens When AI Trains on AI? →
       </a>
     </div>
   </div>
