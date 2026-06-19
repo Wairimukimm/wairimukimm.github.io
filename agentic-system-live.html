@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgentRisk · Multi-Agent Credit Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --g900:#052e16; --g800:#065f46; --g700:#047857; --g600:#059669;
+  --g500:#10b981; --g400:#34d399; --g200:#a7f3d0; --g100:#d1fae5; --g50:#ecfdf5;
+  --white:#ffffff; --gray50:#f8fafc; --gray100:#f1f5f9; --gray200:#e2e8f0;
+  --gray400:#94a3b8; --gray500:#64748b; --gray700:#334155; --gray900:#0f172a;
+  --red500:#ef4444; --red100:#fee2e2; --amber500:#f59e0b; --amber100:#fef3c7;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--gray50);color:var(--gray900);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--g900);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;color:var(--white);letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--g400);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.header-badge{font-size:0.72rem;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:var(--g400);padding:4px 12px;border-radius:20px;font-weight:600;letter-spacing:0.06em;}
+.back-link{color:var(--g400);text-decoration:none;font-size:0.82rem;font-weight:500;}
+.back-link:hover{color:var(--g200);}
+
+/* MAIN LAYOUT */
+.app{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 60px);}
+
+/* LEFT PANEL */
+.left-panel{background:var(--white);border-right:1px solid var(--gray200);display:flex;flex-direction:column;}
+.panel-header{padding:28px 28px 20px;border-bottom:1px solid var(--gray100);}
+.panel-header h2{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:var(--gray900);margin-bottom:4px;}
+.panel-header p{font-size:0.82rem;color:var(--gray500);line-height:1.5;}
+
+.input-area{padding:24px 28px;flex:1;display:flex;flex-direction:column;gap:16px;}
+textarea{width:100%;height:180px;border:1.5px solid var(--gray200);border-radius:12px;padding:14px 16px;font-size:0.88rem;font-family:'Inter',sans-serif;color:var(--gray900);resize:none;line-height:1.6;transition:border-color 0.2s;background:var(--gray50);}
+textarea:focus{outline:none;border-color:var(--g500);background:var(--white);}
+textarea::placeholder{color:var(--gray400);}
+
+.examples-label{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray500);}
+.examples{display:flex;flex-direction:column;gap:8px;}
+.example-btn{background:var(--g50);border:1px solid var(--g100);border-radius:8px;padding:10px 14px;text-align:left;cursor:pointer;font-size:0.8rem;color:var(--g800);font-family:'Inter',sans-serif;transition:all 0.15s;line-height:1.4;}
+.example-btn:hover{background:var(--g100);border-color:var(--g200);}
+
+.run-btn{background:var(--g700);color:var(--white);border:none;border-radius:12px;padding:15px 24px;font-size:0.92rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;}
+.run-btn:hover:not(:disabled){background:var(--g800);}
+.run-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.run-btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:none;}
+.run-btn.loading .spinner{display:block;}
+.run-btn.loading .btn-text{display:none;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* AGENT PIPELINE STATUS */
+.pipeline-status{padding:20px 28px;border-top:1px solid var(--gray100);}
+.pipeline-status h3{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray500);margin-bottom:14px;}
+.agents-list{display:flex;flex-direction:column;gap:8px;}
+.agent-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:var(--gray50);border:1px solid var(--gray100);transition:all 0.3s;}
+.agent-row.active{background:var(--g50);border-color:var(--g200);}
+.agent-row.done{background:var(--g50);border-color:var(--g200);}
+.agent-row.error{background:var(--red100);border-color:#fca5a5;}
+.agent-icon{font-size:1.1rem;flex-shrink:0;}
+.agent-info{flex:1;}
+.agent-name{font-size:0.82rem;font-weight:600;color:var(--gray700);}
+.agent-status-text{font-size:0.72rem;color:var(--gray400);margin-top:1px;}
+.agent-row.active .agent-status-text{color:var(--g600);}
+.agent-row.done .agent-status-text{color:var(--g700);}
+.status-indicator{width:8px;height:8px;border-radius:50%;background:var(--gray200);flex-shrink:0;}
+.agent-row.active .status-indicator{background:var(--g500);animation:pulse 1s ease-in-out infinite;}
+.agent-row.done .status-indicator{background:var(--g600);}
+.agent-row.error .status-indicator{background:var(--red500);}
+
+/* RIGHT PANEL */
+.right-panel{padding:32px 40px;overflow-y:auto;}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:60px 40px;}
+.empty-icon{font-size:3rem;margin-bottom:20px;opacity:0.4;}
+.empty-state h3{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;color:var(--gray500);margin-bottom:8px;font-weight:600;}
+.empty-state p{color:var(--gray400);font-size:0.88rem;max-width:320px;line-height:1.6;}
+
+/* DASHBOARD */
+.dashboard{display:none;flex-direction:column;gap:24px;}
+.dashboard.visible{display:flex;}
+
+/* RISK SCORE CARD */
+.score-card{background:var(--white);border-radius:16px;border:1px solid var(--gray200);padding:28px 32px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;}
+.score-ring-wrap{position:relative;width:100px;height:100px;}
+.score-ring-wrap svg{transform:rotate(-90deg);}
+.score-value{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.score-num{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;line-height:1;}
+.score-label-small{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray400);font-weight:600;}
+.score-details h3{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;}
+.score-details p{color:var(--gray500);font-size:0.85rem;line-height:1.6;}
+.risk-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:20px;font-size:0.78rem;font-weight:700;letter-spacing:0.04em;margin-bottom:10px;}
+.risk-badge.low{background:var(--g100);color:var(--g800);}
+.risk-badge.medium{background:var(--amber100);color:#92400e;}
+.risk-badge.high{background:var(--red100);color:#991b1b;}
+.risk-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* SECTION CARDS */
+.card{background:var(--white);border-radius:16px;border:1px solid var(--gray200);padding:24px 28px;}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:700;color:var(--gray900);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title .card-icon{font-size:1rem;}
+
+/* FLAGS */
+.flags-list{display:flex;flex-direction:column;gap:10px;}
+.flag{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:10px;border:1px solid;}
+.flag.high-flag{background:#fff5f5;border-color:#fca5a5;}
+.flag.med-flag{background:#fffbeb;border-color:#fde68a;}
+.flag.low-flag{background:var(--g50);border-color:var(--g100);}
+.flag-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.flag-body{flex:1;}
+.flag-title{font-size:0.83rem;font-weight:600;color:var(--gray900);margin-bottom:2px;}
+.flag-desc{font-size:0.78rem;color:var(--gray500);line-height:1.5;}
+.flag-severity{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:1px;}
+.high-flag .flag-severity{background:#fca5a5;color:#7f1d1d;}
+.med-flag .flag-severity{background:#fde68a;color:#78350f;}
+.low-flag .flag-severity{background:var(--g200);color:var(--g900);}
+
+/* RECOMMENDATIONS */
+.rec-list{display:flex;flex-direction:column;gap:10px;}
+.rec{display:flex;gap:12px;padding:12px 14px;background:var(--gray50);border-radius:10px;border:1px solid var(--gray100);}
+.rec-num{width:22px;height:22px;border-radius:6px;background:var(--g700);color:white;font-size:0.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.rec-text{font-size:0.83rem;color:var(--gray700);line-height:1.6;}
+
+/* NARRATIVE */
+.narrative{font-size:0.88rem;color:var(--gray700);line-height:1.8;background:var(--gray50);border-radius:10px;padding:16px 18px;border:1px solid var(--gray100);}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.stat-box{background:var(--gray50);border-radius:10px;padding:16px;border:1px solid var(--gray100);text-align:center;}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--g700);}
+.stat-lbl{font-size:0.72rem;color:var(--gray400);margin-top:2px;font-weight:500;}
+
+/* ERROR BANNER */
+.error-banner{background:var(--red100);border:1px solid #fca5a5;border-radius:12px;padding:16px 20px;color:#991b1b;font-size:0.85rem;display:none;}
+.error-banner.visible{display:block;}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr;}
+  .left-panel{border-right:none;border-bottom:1px solid var(--gray200);}
+  .right-panel{padding:24px 20px;}
+  .score-card{grid-template-columns:1fr;gap:16px;text-align:center;}
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    AgentRisk
+  </div>
+  <span class="header-badge">MULTI-AGENT SYSTEM · LIVE</span>
+  <a href="index.html" class="back-link">← Portfolio</a>
+</header>
+
+<div class="app">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <h2>Borrower Profile</h2>
+      <p>Describe a borrower in plain text. Three AI agents will validate the data, analyse risk signals, and generate a credit assessment.</p>
+    </div>
+
+    <div class="input-area">
+      <textarea id="borrowerInput" placeholder="e.g. John is a 34-year-old market trader in Nairobi. Monthly income around KES 45,000, mostly M-Pesa payments. Has a KSh 80,000 loan request. No formal employment contract. Sends money to family upcountry regularly. Had one missed mobile loan repayment 8 months ago..."></textarea>
+
+      <div class="examples-label">Try an example</div>
+      <div class="examples">
+        <button class="example-btn" onclick="loadExample(0)">📱 Informal trader, M-Pesa income, first loan request</button>
+        <button class="example-btn" onclick="loadExample(1)">🏢 Salaried employee, existing debts, large loan ask</button>
+        <button class="example-btn" onclick="loadExample(2)">🌾 Smallholder farmer, seasonal income, agri-loan</button>
+      </div>
+
+      <div class="error-banner" id="errorBanner"></div>
+
+      <button class="run-btn" id="runBtn" onclick="runAgents()">
+        <span class="btn-text">▶ Run Agent Analysis</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <div class="pipeline-status">
+      <h3>Agent Pipeline</h3>
+      <div class="agents-list">
+        <div class="agent-row" id="agent-validator">
+          <div class="agent-icon">🔍</div>
+          <div class="agent-info">
+            <div class="agent-name">Data Validator</div>
+            <div class="agent-status-text" id="val-status">Waiting</div>
+          </div>
+          <div class="status-indicator"></div>
+        </div>
+        <div class="agent-row" id="agent-analyst">
+          <div class="agent-icon">📝</div>
+          <div class="agent-info">
+            <div class="agent-name">Narrative Analyst</div>
+            <div class="agent-status-text" id="ana-status">Waiting</div>
+          </div>
+          <div class="status-indicator"></div>
+        </div>
+        <div class="agent-row" id="agent-scorer">
+          <div class="agent-icon">📊</div>
+          <div class="agent-info">
+            <div class="agent-name">Risk Scorer</div>
+            <div class="agent-status-text" id="sco-status">Waiting</div>
+          </div>
+          <div class="status-indicator"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🤖</div>
+      <h3>No analysis yet</h3>
+      <p>Describe a borrower on the left and run the agent pipeline to see their credit assessment dashboard.</p>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+
+      <!-- SCORE -->
+      <div class="score-card" id="scoreCard">
+        <div class="score-ring-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#059669" stroke-width="10"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2"
+              id="scoreCircle" stroke-linecap="round" style="transition:stroke-dashoffset 1.2s ease,stroke 0.3s;"/>
+          </svg>
+          <div class="score-value">
+            <div class="score-num" id="scoreNum">—</div>
+            <div class="score-label-small">/ 100</div>
+          </div>
+        </div>
+        <div class="score-details">
+          <div class="risk-badge" id="riskBadge">—</div>
+          <h3 id="scoreHeading">Credit Assessment</h3>
+          <p id="scoreSummary"></p>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-val" id="statIncome">—</div><div class="stat-lbl">Income Signal</div></div>
+        <div class="stat-box"><div class="stat-val" id="statFlags">—</div><div class="stat-lbl">Risk Flags</div></div>
+        <div class="stat-box"><div class="stat-val" id="statConfidence">—</div><div class="stat-lbl">Model Confidence</div></div>
+      </div>
+
+      <!-- NARRATIVE -->
+      <div class="card">
+        <div class="card-title"><span class="card-icon">📝</span> Analyst Narrative</div>
+        <div class="narrative" id="narrativeText"></div>
+      </div>
+
+      <!-- FLAGS -->
+      <div class="card">
+        <div class="card-title"><span class="card-icon">⚑</span> Risk Flags</div>
+        <div class="flags-list" id="flagsList"></div>
+      </div>
+
+      <!-- RECOMMENDATIONS -->
+      <div class="card">
+        <div class="card-title"><span class="card-icon">💡</span> Recommendations</div>
+        <div class="rec-list" id="recList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const EXAMPLES = [
+  `Amina is a 29-year-old second-hand clothes trader at Gikomba Market, Nairobi. She earns roughly KES 35,000–55,000 per month, mostly received via M-Pesa from customers. She has been in business for 3 years. She is requesting a KES 60,000 working capital loan to stock up before the festive season. No formal employment. Owns a small plot upcountry inherited from her father. No prior formal loans but has used M-Shwari twice and repaid on time.`,
+  `David is a 41-year-old software engineer employed by a mid-sized tech firm in Nairobi on a gross salary of KES 180,000/month. He is requesting a KES 2.5 million personal loan to buy a car. He currently has a mortgage of KES 8.2 million with 14 years remaining, one logbook loan of KES 400,000, and two active credit cards with a combined balance of KES 280,000. He has never missed a payment but his debt-to-income ratio is high.`,
+  `Grace is a 52-year-old smallholder farmer in Kisumu County growing maize and vegetables on 2 acres. Her annual income is approximately KES 180,000, earned seasonally during harvest in April and November. She is requesting a KES 45,000 agri-input loan to buy fertiliser and seeds. She has no prior formal credit history. Has a mobile money account used mainly for M-Pesa transfers to family. Her local SACCO vouches for her character and repayment history within the group.`
+];
+
+function loadExample(i) {
+  document.getElementById('borrowerInput').value = EXAMPLES[i];
+}
+
+function setAgent(id, state, text) {
+  const row = document.getElementById('agent-' + id);
+  row.className = 'agent-row ' + (state || '');
+  document.getElementById(id === 'validator' ? 'val-status' : id === 'analyst' ? 'ana-status' : 'sco-status').textContent = text;
+}
+
+function resetAgents() {
+  ['validator','analyst','scorer'].forEach(a => setAgent(a, '', 'Waiting'));
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = msg;
+  b.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorBanner').classList.remove('visible');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function callClaude(systemPrompt, userMsg) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+function parseJSON(text) {
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error('Could not parse agent response as JSON');
+  }
+}
+
+async function runAgents() {
+  const input = document.getElementById('borrowerInput').value.trim();
+  if (!input) { showError('Please describe a borrower first.'); return; }
+
+  hideError();
+  resetAgents();
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dashboard').classList.remove('visible');
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  try {
+    // AGENT 1: VALIDATOR
+    setAgent('validator', 'active', 'Extracting & validating data...');
+    const validatorOut = await callClaude(
+      `You are a data validation agent for a credit risk system. Extract structured information from a borrower description. 
+Return ONLY valid JSON with this exact structure:
+{
+  "name": string,
+  "age": number or null,
+  "occupation": string,
+  "location": string,
+  "monthly_income_kes": number or null,
+  "income_type": "formal" | "informal" | "seasonal" | "unknown",
+  "loan_amount_kes": number or null,
+  "loan_purpose": string,
+  "existing_debts": boolean,
+  "prior_credit_history": "positive" | "negative" | "none" | "mixed",
+  "data_completeness": "high" | "medium" | "low",
+  "missing_fields": [string],
+  "validation_notes": string
+}`,
+      input
+    );
+    const validated = parseJSON(validatorOut);
+    setAgent('validator', 'done', 'Validated · ' + validated.data_completeness + ' completeness');
+
+    await sleep(400);
+
+    // AGENT 2: NARRATIVE ANALYST
+    setAgent('analyst', 'active', 'Analysing risk signals...');
+    const analystOut = await callClaude(
+      `You are a credit risk narrative analyst. Given validated borrower data, produce a risk narrative and flag list.
+Return ONLY valid JSON:
+{
+  "narrative": string (2-3 sentences, professional, objective, no company names),
+  "flags": [
+    { "title": string, "description": string, "severity": "high" | "medium" | "low" }
+  ],
+  "income_signal": "Strong" | "Moderate" | "Weak" | "Unclear",
+  "positive_factors": [string]
+}
+Be specific to the borrower profile. Include 2-5 flags. Be balanced — note strengths too.`,
+      `Validated borrower data: ${JSON.stringify(validated)}\n\nOriginal description: ${input}`
+    );
+    const analysis = parseJSON(analystOut);
+    setAgent('analyst', 'done', 'Analysed · ' + (analysis.flags?.length || 0) + ' flags found');
+
+    await sleep(400);
+
+    // AGENT 3: RISK SCORER
+    setAgent('scorer', 'active', 'Scoring and generating recommendations...');
+    const scorerOut = await callClaude(
+      `You are a credit risk scoring agent. Based on validated data and narrative analysis, produce a final score and recommendations.
+Return ONLY valid JSON:
+{
+  "score": number between 0-100,
+  "risk_tier": "Low" | "Medium" | "High",
+  "confidence": "High" | "Medium" | "Low",
+  "score_heading": string (short, 4-6 words describing the profile),
+  "score_summary": string (1 sentence explaining the score),
+  "recommendations": [string] (3-4 specific, actionable items for a credit officer)
+}
+Score guidelines: 70-100 = Low risk, 40-69 = Medium, 0-39 = High risk.`,
+      `Validated data: ${JSON.stringify(validated)}\nNarrative analysis: ${JSON.stringify(analysis)}`
+    );
+    const scored = parseJSON(scorerOut);
+    setAgent('scorer', 'done', 'Scored · ' + scored.risk_tier + ' risk · ' + scored.score + '/100');
+
+    renderDashboard(validated, analysis, scored);
+
+  } catch (err) {
+    showError('Agent error: ' + err.message + '. Check your API key is configured.');
+    ['validator','analyst','scorer'].forEach(a => {
+      const row = document.getElementById('agent-' + a);
+      if (row.classList.contains('active')) setAgent(a, 'error', 'Failed');
+    });
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function renderDashboard(validated, analysis, scored) {
+  const score = scored.score;
+  const tier = scored.risk_tier;
+
+  // Score ring
+  const offset = 251.2 - (score / 100) * 251.2;
+  const circle = document.getElementById('scoreCircle');
+  circle.style.strokeDashoffset = offset;
+  circle.style.stroke = tier === 'Low' ? '#059669' : tier === 'Medium' ? '#f59e0b' : '#ef4444';
+
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreNum').style.color = tier === 'Low' ? '#047857' : tier === 'Medium' ? '#d97706' : '#dc2626';
+
+  // Badge
+  const badge = document.getElementById('riskBadge');
+  badge.textContent = tier + ' Risk';
+  badge.className = 'risk-badge ' + tier.toLowerCase();
+
+  document.getElementById('scoreHeading').textContent = scored.score_heading || 'Credit Assessment';
+  document.getElementById('scoreSummary').textContent = scored.score_summary || '';
+
+  // Stats
+  document.getElementById('statIncome').textContent = analysis.income_signal || '—';
+  document.getElementById('statFlags').textContent = (analysis.flags?.length || 0) + ' found';
+  document.getElementById('statConfidence').textContent = scored.confidence || '—';
+
+  // Narrative
+  document.getElementById('narrativeText').textContent = analysis.narrative || '';
+
+  // Flags
+  const flagsList = document.getElementById('flagsList');
+  flagsList.innerHTML = '';
+  (analysis.flags || []).forEach(f => {
+    const cls = f.severity === 'high' ? 'high-flag' : f.severity === 'medium' ? 'med-flag' : 'low-flag';
+    const icon = f.severity === 'high' ? '🔴' : f.severity === 'medium' ? '🟡' : '🟢';
+    flagsList.innerHTML += `
+      <div class="flag ${cls}">
+        <div class="flag-icon">${icon}</div>
+        <div class="flag-body">
+          <div class="flag-title">${f.title}</div>
+          <div class="flag-desc">${f.description}</div>
+        </div>
+        <div class="flag-severity">${f.severity}</div>
+      </div>`;
+  });
+
+  // Recommendations
+  const recList = document.getElementById('recList');
+  recList.innerHTML = '';
+  (scored.recommendations || []).forEach((r, i) => {
+    recList.innerHTML += `
+      <div class="rec">
+        <div class="rec-num">${i + 1}</div>
+        <div class="rec-text">${r}</div>
+      </div>`;
+  });
+
+  document.getElementById('dashboard').classList.add('visible');
+  document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
