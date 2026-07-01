@@ -1,146 +1,501 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wairimu Kimani| Data Scientist</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; }
-    header { background: #161b22; padding: 60px 40px; text-align: center; border-bottom: 1px solid #30363d; }
-    header h1 { font-size: 2.4rem; color: #58a6ff; }
-    header p { margin-top: 10px; color: #8b949e; font-size: 1.1rem; }
-    .badges { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .badge { background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: #58a6ff; text-decoration: none; }
-    .badge:hover { background: #58a6ff; color: #0d1117; }
-    section { max-width: 1000px; margin: 50px auto; padding: 0 24px; }
-    h2 { color: #58a6ff; font-size: 1.4rem; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
-    .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
-    .tag { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 5px 14px; font-size: 0.82rem; color: #79c0ff; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-    .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 22px; transition: border-color 0.2s; }
-    .card:hover { border-color: #58a6ff; }
-    .card h3 { color: #e6edf3; margin-bottom: 8px; font-size: 1rem; }
-    .card p { color: #8b949e; font-size: 0.85rem; line-height: 1.5; margin-bottom: 14px; }
-    .card a { color: #58a6ff; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
-    .card a:hover { text-decoration: underline; }
-    .articles { display: flex; flex-direction: column; gap: 14px; }
-    .article { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px 22px; }
-    .article a { color: #79c0ff; text-decoration: none; font-size: 0.95rem; }
-    .article a:hover { text-decoration: underline; }
-    footer { text-align: center; padding: 40px; color: #484f58; font-size: 0.85rem; border-top: 1px solid #21262d; margin-top: 60px; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wairimu Kimani | Data Scientist & ML Engineer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:#f8f9fc; --bg2:#ffffff; --bg3:#f1f4f9;
+  --border:#e2e8f0; --border2:#cbd5e1;
+  --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+  --accent:#2563eb; --accent2:#1d4ed8; --accent-light:#eff6ff;
+  --accent-mid:#bfdbfe;
+  --grad:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 24px rgba(37,99,235,0.10);
+}
+[data-theme="dark"] {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d;
+  --border:#30363d; --border2:#444c56;
+  --text:#e6edf3; --text2:#8b949e; --text3:#484f58;
+  --accent:#58a6ff; --accent2:#388bfd; --accent-light:#1c2e4a;
+  --accent-mid:#1f4b8e;
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.2);
+  --shadow-md:0 4px 24px rgba(88,166,255,0.10);
+}
+
+/* ── RESET ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background 0.3s,color 0.3s;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(248,249,252,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 48px;display:flex;align-items:center;justify-content:space-between;transition:background 0.3s;}
+[data-theme="dark"] nav{background:rgba(13,17,23,0.85);}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;color:var(--accent);letter-spacing:-0.02em;}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-links a{font-size:0.85rem;color:var(--text2);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.nav-links a:hover{color:var(--accent);}
+.theme-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:0.8rem;color:var(--text2);display:flex;align-items:center;gap:6px;transition:all 0.2s;}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding:100px 48px 60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+
+/* AI graph nodes - signature element */
+.node-canvas{position:absolute;inset:0;}
+canvas#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:0.35;}
+[data-theme="dark"] canvas#heroCanvas{opacity:0.5;}
+
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:60px;align-items:center;position:relative;z-index:1;width:100%;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:20px;padding:5px 14px;font-size:0.76rem;font-weight:600;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;}
+.hero-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;line-height:1.12;letter-spacing:-0.03em;color:var(--text);margin-bottom:16px;}
+.hero h1 .accent{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:1.05rem;color:var(--text2);max-width:520px;margin-bottom:32px;line-height:1.7;}
+.hero-badges{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:36px;}
+.badge{display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:0.83rem;color:var(--text2);text-decoration:none;font-weight:500;transition:all 0.2s;box-shadow:var(--shadow);}
+.badge:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-md);}
+
+/* STATS */
+.stats-row{display:flex;gap:28px;}
+.stat{display:flex;flex-direction:column;}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;color:var(--accent);line-height:1;}
+.stat-lbl{font-size:0.74rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* HERO CARD */
+.hero-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+.hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);}
+.hc-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:14px;}
+.hc-stack{display:flex;flex-wrap:wrap;gap:7px;}
+.hc-tag{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-mid);border-radius:6px;padding:4px 10px;font-size:0.76rem;font-weight:600;}
+.hc-divider{height:1px;background:var(--border);margin:18px 0;}
+.hc-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.hc-row:last-child{margin-bottom:0;}
+.hc-icon{width:32px;height:32px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+.hc-info .hi-title{font-size:0.82rem;font-weight:600;color:var(--text);}
+.hc-info .hi-sub{font-size:0.74rem;color:var(--text3);}
+
+/* ── SECTIONS ── */
+.section-wrap{max-width:1100px;margin:0 auto;padding:80px 48px;}
+.section-header{margin-bottom:40px;}
+.section-eyebrow{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:8px;}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;}
+.section-divider{height:1px;background:var(--border);margin:0 48px;}
+
+/* ── EXPERIENCE TIMELINE ── */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:grid;grid-template-columns:160px 1fr;gap:32px;padding:32px 0;border-bottom:1px solid var(--border);}
+.tl-item:last-child{border-bottom:none;}
+.tl-date{font-size:0.8rem;color:var(--text3);font-weight:500;padding-top:4px;}
+.tl-body{}
+.tl-role{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:2px;}
+.tl-company{font-size:0.84rem;color:var(--accent);font-weight:600;margin-bottom:10px;}
+.tl-desc{font-size:0.86rem;color:var(--text2);line-height:1.7;}
+.tl-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.tl-tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:0.73rem;color:var(--text2);font-weight:500;}
+
+/* ── PROJECT CARDS ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;transition:all 0.22s;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;inset:0;border-radius:16px;box-shadow:var(--shadow-md);opacity:0;transition:opacity 0.22s;}
+.card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.card:hover::after{opacity:1;}
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
+.card:hover .card-accent{transform:scaleX(1);}
+.card-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:14px;}
+.card h3{color:var(--text);margin-bottom:8px;font-size:0.95rem;font-weight:600;}
+.card p{color:var(--text2);font-size:0.83rem;line-height:1.6;margin-bottom:16px;}
+.card a{color:var(--accent);text-decoration:none;font-size:0.83rem;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:gap 0.2s;}
+.card a:hover{gap:8px;}
+
+/* ── TECH STACK ── */
+.stack-wrap{display:flex;flex-wrap:wrap;gap:10px;}
+.tag{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.82rem;color:var(--text2);font-weight:500;transition:all 0.2s;}
+.tag:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+
+/* ── ARTICLE CARDS ── */
+.articles-grid{display:flex;flex-direction:column;gap:14px;}
+.article-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:18px;transition:all 0.2s;}
+.article-card:hover{border-color:var(--accent);transform:translateX(4px);}
+.article-icon{font-size:1.4rem;flex-shrink:0;}
+.article-card a{color:var(--text);text-decoration:none;font-size:0.92rem;font-weight:500;line-height:1.5;transition:color 0.2s;}
+.article-card:hover a{color:var(--accent);}
+.article-arrow{margin-left:auto;color:var(--text3);font-size:1rem;transition:transform 0.2s;flex-shrink:0;}
+.article-card:hover .article-arrow{transform:translateX(4px);color:var(--accent);}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px 48px;color:var(--text3);font-size:0.84rem;border-top:1px solid var(--border);}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity 0.55s ease,transform 0.55s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  nav{padding:12px 20px;}
+  .nav-links{gap:16px;}
+  .hero{padding:80px 20px 40px;}
+  .hero-inner{grid-template-columns:1fr;gap:32px;}
+  .hero-card{display:none;}
+  .stats-row{gap:20px;}
+  .section-wrap{padding:60px 20px;}
+  .section-divider{margin:0 20px;}
+  .tl-item{grid-template-columns:1fr;gap:8px;}
+  .tl-date{font-size:0.75rem;}
+  footer{padding:30px 20px;}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;}
+  .reveal{opacity:1;transform:none;}
+}
+</style>
 </head>
 <body>
 
-<header>
-  <h1> Hi, I'm Wairimu</h1>
-  <p>Data Scientist & ML Engineer · Nairobi, Kenya</p>
-  <p style="margin-top:8px; color:#8b949e; max-width:600px; margin-inline:auto; font-size:0.95rem;">
-    Transforming raw data into decisions. Building ML models, AI automation, and data products for African markets.
-  </p>
-  <div class="badges">
-    <a href="https://www.linkedin.com/in/wairimu-k-99b75a1b1/" target="_blank" class="badge">🔗 LinkedIn</a>
-    <a href="https://medium.com/@pwairimu046" target="_blank" class="badge"> Medium</a>
-    <a href="mailto:pwairimu046@gmail.com" class="badge"> Email</a>
-    <a href="Wairimu_CV.pdf" target="_blank" class="badge"> Wairimu Kimani CV</a>
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">Wairimu Kimani</span>
+  <div class="nav-links">
+    <a href="#experience">Experience</a>
+    <a href="#projects">Projects</a>
+    <a href="#writing">Writing</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
   </div>
-</header>
+</nav>
 
-<section>
-  <h2> Tech Stack</h2>
-  <div class="stack">
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <canvas id="heroCanvas"></canvas>
+  </div>
+  <div class="hero-inner">
+    <div>
+      <!-- <div class="hero-eyebrow"><span class="dot"></span>Available for new opportunities</div> -->
+      <h1>Hi, I'm <span class="accent">Wairimu</span><br>Data Scientist &<br>ML Engineer</h1>
+      <p class="hero-sub">Building ML models, AI automation, and data products for African markets, from credit risk pipelines to multi-agent LLM systems.</p>
+      <div class="hero-badges">
+        <a href="https://www.linkedin.com/in/wairimu-k-99b75a1b1/" target="_blank" class="badge"> LinkedIn</a>
+        <a href="https://medium.com/@pwairimu046" target="_blank" class="badge"> Medium</a>
+        <a href="mailto:pwairimu046@gmail.com" class="badge"> Email</a>
+        <a href="Wairimu_CV.pdf" target="_blank" class="badge"> CV</a>
+      </div>
+      <div class="stats-row">
+        <div class="stat"><span class="stat-num" data-target="4">0</span><span class="stat-lbl">Years experience</span></div>
+        <div class="stat"><span class="stat-num" data-target="12">0</span><span class="stat-lbl">Projects shipped</span></div>
+        <div class="stat"><span class="stat-num" data-target="6">0</span><span class="stat-lbl">Articles published</span></div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hc-label">Current stack</div>
+      <div class="hc-stack">
+        <span class="hc-tag">Python</span><span class="hc-tag">LangChain</span><span class="hc-tag">AutoGen</span>
+        <span class="hc-tag">XGBoost</span><span class="hc-tag">AWS</span><span class="hc-tag">Docker</span>
+        <span class="hc-tag">FastAPI</span><span class="hc-tag">Claude API</span>
+      </div>
+      <div class="hc-divider"></div>
+      <div class="hc-row">
+        <div class="hc-icon">🏢</div>
+        <div class="hc-info"><div class="hi-title">Pngme</div><div class="hi-sub">Data Scientist · Aug 2024 – Present</div></div>
+      </div>
+      <div class="hc-row">
+        <div class="hc-icon">🌍</div>
+        <div class="hc-info"><div class="hi-title">Nairobi, Kenya</div><div class="hi-sub">Open to remote</div></div>
+      </div>
+      <div class="hc-row">
+        <div class="hc-icon">🎓</div>
+        <div class="hc-info"><div class="hi-title">BSc Economics & Statistics</div><div class="hi-sub">Kabarak University </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- TECH STACK -->
+<div class="section-wrap reveal" id="stack">
+  <div class="section-header">
+    <div class="section-eyebrow">Tools & Technologies</div>
+    <div class="section-title">Tech Stack</div>
+  </div>
+  <div class="stack-wrap">
     <span class="tag">Python</span><span class="tag">SQL</span><span class="tag">R</span>
     <span class="tag">Machine Learning</span><span class="tag">Gen AI</span><span class="tag">LightGBM</span>
     <span class="tag">Time Series</span><span class="tag">NLP</span>
     <span class="tag">Firebase</span><span class="tag">FastAPI</span><span class="tag">Streamlit</span>
-    <span class="tag">AWS(Redshift, Athena, S3)</span><span class="tag">Docker</span><span class="tag">AI Automation</span>
-    <span class="tag">LLMs(Claude, GPT)</span><span class="tag">MLOps</span>
+    <span class="tag">AWS (Redshift, Athena, S3)</span><span class="tag">Docker</span><span class="tag">AI Automation</span>
+    <span class="tag">LLMs (Claude, GPT)</span><span class="tag">MLOps</span>
   </div>
+</div>
 
-  <h2> Projects</h2>
-  <div class="cards">
+<div class="section-divider"></div>
+
+<!-- EXPERIENCE -->
+<div class="section-wrap reveal" id="experience">
+  <div class="section-header">
+    <div class="section-eyebrow">Career</div>
+    <div class="section-title">Experience</div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-date">Aug 2024 – Present</div>
+      <div class="tl-body">
+        <div class="tl-role">Data Scientist</div>
+        <div class="tl-company">Pngme</div>
+        <div class="tl-desc">Built LLM evaluation frameworks with hallucination detection and regression testing. Developed multi-agent LLM systems with AutoGen for credit risk analysis and automated financial workflows. Architected RAG pipelines using LangChain on AWS. Designed ML models (XGBoost, random forest) for customer behaviour and credit risk prediction.</div>
+        <div class="tl-tags"><span class="tl-tag">LangChain</span><span class="tl-tag">AutoGen</span><span class="tl-tag">XGBoost</span><span class="tl-tag">AWS</span><span class="tl-tag">MLOps</span></div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Jan 2022 – Aug 2024</div>
+      <div class="tl-body">
+        <div class="tl-role">Data Scientist</div>
+        <div class="tl-company">Seven Skies Information & Research · Nairobi</div>
+        <div class="tl-desc">Built predictive models using VECM and time series methods. Created interactive dashboards and visualisations for research insights. Collaborated with cross-functional teams to deliver data-driven solutions.</div>
+        <div class="tl-tags"><span class="tl-tag">VECM</span><span class="tl-tag">Time Series</span><span class="tl-tag">Power BI</span><span class="tl-tag">Python</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- PROJECTS -->
+<div class="section-wrap reveal" id="projects">
+  <div class="section-header">
+    <div class="section-eyebrow">Work</div>
+    <div class="section-title">Projects</div>
+  </div>
+  <div class="cards-grid">
 
     <div class="card">
-      <h3>⏱ Overtime Tracker</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">🤖</div>
+      <h3>AI Agentic System</h3>
+      <p>Three AI agents validate data, analyse risk signals, and generate a live credit assessment dashboard.</p>
+      <a href="agentic-system-live.html" target="_blank">Open demo →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-icon">🔍</div>
+      <h3>RAG Pipeline</h3>
+      <p>Retrieval-augmented generation over a financial knowledge base. Side-by-side retrieved chunks and generated answer.</p>
+      <a href="rag-pipeline-live.html" target="_blank">Open demo →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-icon">📡</div>
+      <h3>Real-Time Streaming Pipeline</h3>
+      <p>End-to-end streaming architecture ingesting and serving live events with sub-second latency using Kafka and Flink.</p>
+      <a href="streaming-pipeline-project.html" target="_blank">View case study →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-icon">🍃</div>
+      <h3>ML Feature Store</h3>
+      <p>Reusable ML features engineered from raw data into a queryable Feast feature store, eliminating training-serving skew.</p>
+      <a href="feature-store-project.html" target="_blank">View case study →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-icon">⏱</div>
+      <h3>Overtime Tracker</h3>
       <p>Interactive HR tool for logging, calculating, and visualising employee overtime hours.</p>
-      <a href="overtime-tracker-v2.html" target="_blank">Open Tool →</a>
+      <a href="overtime-tracker-v2.html" target="_blank">Open tool →</a>
     </div>
-    
-   <div class="card">
-      <h3> AI Agentic System</h3>
-      <p>AI Agentic System — Three AI agents will validate the data, analyse risk signals, and generate a credit assessment.</p>
-      <a href="agentic-system-live.html" target="_blank">Agentic Bot →</a>
-    </div>
-
-    <!-- <div class="card">
-      <h3> Streamling Pipeline</h3>
-      <p>An end-to-end streaming architecture that ingests, processes, and serves live events with sub-second latency .</p>
-      <a href="streaming-pipeline-project.html" target="_blank">Agentic Bot →</a>
-    </div> -->
 
     <div class="card">
-      <h3> Retail Analytics Dashboard</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">🛒</div>
+      <h3>Retail Analytics Dashboard</h3>
       <p>Sales trends, inventory, and performance analytics for retail operations.</p>
-      <a href="retail-analytics-dashboard (2).html" target="_blank">Open Dashboard →</a>
+      <a href="retail-analytics-dashboard (2).html" target="_blank">Open dashboard →</a>
     </div>
 
     <div class="card">
-      <h3> Financial Reporting Suite</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">💰</div>
+      <h3>Financial Reporting Suite</h3>
       <p>End-to-end financial reporting with KPI tracking and period comparisons.</p>
-      <a href="financial-reporting-suite.html" target="_blank">Open Tool →</a>
+      <a href="financial-reporting-suite.html" target="_blank">Open tool →</a>
     </div>
 
     <div class="card">
-      <h3> Expenses Tracker</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">💸</div>
+      <h3>Expenses Tracker</h3>
       <p>Personal and business expense tracking with category breakdowns and visual summaries.</p>
-      <a href="expenses-tracker.html" target="_blank">Open Tracker →</a>
+      <a href="expenses-tracker.html" target="_blank">Open tracker →</a>
     </div>
 
     <div class="card">
-      <h3> Document Intelligence Bot</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">📄</div>
+      <h3>Document Intelligence Bot</h3>
       <p>AI-powered document analysis — extract insights from PDFs and text using NLP.</p>
-      <a href="document-intelligence-bot.html" target="_blank">Open Bot →</a>
+      <a href="document-intelligence-bot.html" target="_blank">Open bot →</a>
     </div>
 
     <div class="card">
-      <h3> Demand Forecasting Engine</h3>
+      <div class="card-accent"></div>
+      <div class="card-icon">📈</div>
+      <h3>Demand Forecasting Engine</h3>
       <p>ML-driven demand forecasting for inventory and supply chain optimisation.</p>
-      <a href="demand-forecasting-engine.html" target="_blank">Open Engine →</a>
+      <a href="demand-forecasting-engine.html" target="_blank">Open engine →</a>
     </div>
 
     <div class="card">
-      <h3>📊 Carbon Credits Timeseries Analysis</h3>
-      <p>ARIMA & ETS forecasting on global CO₂ emissions and carbon offset credits. Includes ADF testing, correlation analysis, and trend visualisation.</p>
-      <a href="Carbon credits presentation.pdf" target="_blank">View Presentation →</a>
+      <div class="card-accent"></div>
+      <div class="card-icon">📊</div>
+      <h3>Carbon Credits Timeseries Analysis</h3>
+      <p>ARIMA & ETS forecasting on global CO₂ emissions and carbon offset credits. ADF testing, correlation analysis, trend visualisation.</p>
+      <a href="Carbon credits presentation.pdf" target="_blank">View presentation →</a>
     </div>
 
   </div>
-</section>
+</div>
 
-<section>
-  <h2> Latest Articles</h2>
-  <!-- <div class="articles"> -->
-    <div class="article">
-      <a href="https://medium.com/@pwairimu046/backpropagation-isnt-magic-it-s-just-the-chain-rule-applied-relentlessly-b6b5576f73f4" target="_blank">
-        Backpropagation Isn’t Magic. It’s Just the Chain Rule, Applied Relentlessly. →
-      </a>
-    <div class="article">
-      <a href="https://medium.com/@pwairimu046/when-quantum-meets-ai-things-get-strange-fast-b26d34c25535" target="_blank">
-        When Quantum Meets AI, Things Get Strange Fast →
-      </a>
+<div class="section-divider"></div>
+
+<!-- ARTICLES -->
+<div class="section-wrap reveal" id="writing">
+  <div class="section-header">
+    <div class="section-eyebrow">Writing</div>
+    <div class="section-title">Latest Articles</div>
+  </div>
+  <div class="articles-grid">
+    <div class="article-card">
+      <div class="article-icon">🔗</div>
+      <a href="https://medium.com/@pwairimu046/backpropagation-isnt-magic-it-s-just-the-chain-rule-applied-relentlessly-b6b5576f73f4" target="_blank">Backpropagation Isn't Magic. It's Just the Chain Rule, Applied Relentlessly.</a>
+      <div class="article-arrow">→</div>
     </div>
-    <div class="article">
-      <a href="https://medium.com/@pwairimu046/what-happens-when-ai-trains-on-ai-a115e768058e" target="_blank">
-        What Happens When AI Trains on AI? →
-      </a>
+    <div class="article-card">
+      <div class="article-icon">⚛️</div>
+      <a href="https://medium.com/@pwairimu046/when-quantum-meets-ai-things-get-strange-fast-b26d34c25535" target="_blank">When Quantum Meets AI, Things Get Strange Fast</a>
+      <div class="article-arrow">→</div>
+    </div>
+    <div class="article-card">
+      <div class="article-icon">🤖</div>
+      <a href="https://medium.com/@pwairimu046/what-happens-when-ai-trains-on-ai-a115e768058e" target="_blank">What Happens When AI Trains on AI?</a>
+      <div class="article-arrow">→</div>
     </div>
   </div>
-</section>
+</div>
 
-<footer>
-  Wairimu Kimani © 2026
-</footer>
+<!-- FOOTER -->
+<footer> Wairimu Kimani © 2026</footer>
 
+<script>
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  btn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+// persist
+const saved = localStorage.getItem('theme');
+if (saved) {
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+
+// ── ANIMATED STATS ──
+function animateCount(el) {
+  const target = parseInt(el.dataset.target);
+  const dur = 1400;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(ease * target);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+const statsObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('[data-target]').forEach(animateCount);
+      statsObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.4 });
+statsObs.observe(document.querySelector('.stats-row'));
+
+// ── SCROLL REVEAL ──
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }});
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ── HERO CANVAS — neural graph ──
+const canvas = document.getElementById('heroCanvas');
+const ctx = canvas.getContext('2d');
+let nodes = [], W, H;
+
+function resize() {
+  W = canvas.width = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initNodes(); });
+
+function initNodes() {
+  nodes = Array.from({length: 38}, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+    r: 2 + Math.random() * 2.5
+  }));
+}
+initNodes();
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const nodeColor = isDark ? 'rgba(88,166,255,' : 'rgba(37,99,235,';
+  const lineColor = isDark ? 'rgba(88,166,255,' : 'rgba(37,99,235,';
+
+  nodes.forEach(n => {
+    n.x += n.vx; n.y += n.vy;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+  });
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 140) {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = lineColor + (0.12 * (1 - dist/140)) + ')';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  }
+  nodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = nodeColor + '0.5)';
+    ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
 </body>
 </html>
