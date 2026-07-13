@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finance Ops Automation | Wairimu Kimani</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ms-blue:#0078d4;--ms-blue2:#106ebe;--ms-blue3:#005a9e;--ms-blue-light:#deecf9;--ms-blue-xlight:#eff6fc;
+  --ms-purple:#5c2d91;--ms-purple-light:#edebe9;
+  --ms-green:#107c10;--ms-green-light:#dff6dd;
+  --ms-red:#d13438;--ms-red-light:#fde7e9;
+  --ms-amber:#ff8c00;--ms-amber-light:#fff4ce;
+  --neutral900:#201f1e;--neutral700:#323130;--neutral600:#484644;--neutral500:#605e5c;
+  --neutral300:#a19f9d;--neutral200:#c8c6c4;--neutral150:#d2d0ce;--neutral100:#edebe9;--neutral50:#f3f2f1;--neutral30:#faf9f8;
+  --white:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--neutral50);color:var(--neutral900);min-height:100vh;}
+
+/* ── OUTER NAV (portfolio) ── */
+.portfolio-nav{background:var(--white);border-bottom:1px solid var(--neutral150);padding:11px 24px;display:flex;align-items:center;justify-content:space-between;}
+.pnav-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:0.95rem;color:var(--ms-blue);display:flex;align-items:center;gap:8px;}
+.pnav-logo .badge{background:var(--ms-blue);color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:0.04em;}
+.pnav-back{font-size:0.82rem;color:var(--neutral500);text-decoration:none;font-weight:500;}
+.pnav-back:hover{color:var(--ms-blue);}
+
+/* ── MICROSOFT APP SHELL ── */
+.app-shell{display:flex;flex-direction:column;min-height:calc(100vh - 48px);}
+
+/* App top bar - mimics Power Apps header */
+.app-header{background:var(--ms-blue);color:#fff;padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.app-header-left{display:flex;align-items:center;gap:14px;}
+.app-icon{width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
+.app-name{font-weight:600;font-size:0.92rem;letter-spacing:-0.01em;}
+.app-env{font-size:0.72rem;opacity:0.7;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:10px;}
+.app-header-right{display:flex;align-items:center;gap:12px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;}
+
+/* App nav bar */
+.app-nav{background:var(--white);border-bottom:1px solid var(--neutral150);padding:0 20px;display:flex;align-items:center;gap:4px;}
+.app-tab{padding:12px 16px;font-size:0.83rem;font-weight:500;color:var(--neutral600);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;display:flex;align-items:center;gap:7px;}
+.app-tab:hover{color:var(--ms-blue);background:var(--ms-blue-xlight);}
+.app-tab.active{color:var(--ms-blue);border-bottom-color:var(--ms-blue);font-weight:600;}
+.tab-badge{background:var(--ms-red);color:#fff;font-size:0.62rem;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center;}
+
+/* Main content area */
+.app-body{display:grid;grid-template-columns:240px 1fr;flex:1;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{background:var(--white);border-right:1px solid var(--neutral150);padding:16px 0;overflow-y:auto;}
+.sidebar-section{margin-bottom:8px;}
+.sidebar-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--neutral300);padding:6px 16px 4px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:0.83rem;color:var(--neutral600);cursor:pointer;transition:all 0.12s;border-left:2px solid transparent;}
+.sidebar-item:hover{background:var(--neutral50);color:var(--neutral900);}
+.sidebar-item.active{background:var(--ms-blue-xlight);color:var(--ms-blue);border-left-color:var(--ms-blue);font-weight:600;}
+.sidebar-item .si-icon{font-size:0.95rem;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-item .si-count{margin-left:auto;font-size:0.68rem;font-weight:700;background:var(--ms-blue-light);color:var(--ms-blue);padding:1px 6px;border-radius:8px;}
+
+/* Content pane */
+.content-pane{padding:24px;overflow-y:auto;display:none;}
+.content-pane.active{display:block;}
+
+/* Command bar */
+.cmd-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.cmd-btn{display:flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--neutral200);border-radius:2px;padding:6px 14px;font-size:0.8rem;font-weight:600;color:var(--neutral700);cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;}
+.cmd-btn:hover{background:var(--neutral100);border-color:var(--neutral300);}
+.cmd-btn.primary{background:var(--ms-blue);color:#fff;border-color:var(--ms-blue);}
+.cmd-btn.primary:hover{background:var(--ms-blue2);}
+.cmd-separator{width:1px;height:24px;background:var(--neutral200);margin:0 4px;}
+.search-box{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--neutral50);border:1px solid var(--neutral200);border-radius:2px;padding:5px 10px;}
+.search-box input{border:none;background:transparent;font-size:0.8rem;color:var(--neutral700);outline:none;width:160px;font-family:'Inter',sans-serif;}
+
+/* KPI CARDS */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:var(--white);border:1px solid var(--neutral150);border-radius:2px;padding:16px 18px;}
+.kpi-lbl{font-size:0.72rem;color:var(--neutral500);margin-bottom:6px;font-weight:500;}
+.kpi-val{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;color:var(--neutral900);line-height:1;}
+.kpi-delta{font-size:0.72rem;margin-top:4px;font-weight:600;}
+.kpi-delta.up{color:var(--ms-green);}
+.kpi-delta.down{color:var(--ms-red);}
+
+/* DATA GRID - Power Apps style */
+.grid-wrap{background:var(--white);border:1px solid var(--neutral150);border-radius:2px;overflow:hidden;}
+.grid-header-row{display:grid;padding:8px 16px;background:var(--neutral50);border-bottom:1px solid var(--neutral150);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--neutral500);}
+.grid-row{display:grid;padding:10px 16px;border-bottom:1px solid var(--neutral100);align-items:center;transition:background 0.1s;cursor:pointer;}
+.grid-row:last-child{border-bottom:none;}
+.grid-row:hover{background:var(--ms-blue-xlight);}
+.grid-row.selected{background:var(--ms-blue-xlight);outline:1px solid var(--ms-blue);}
+
+/* Status badges */
+.status{display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:2px;}
+.st-pending{background:var(--ms-amber-light);color:#7a4f00;}
+.st-approved{background:var(--ms-green-light);color:var(--ms-green);}
+.st-rejected{background:var(--ms-red-light);color:var(--ms-red);}
+.st-processing{background:var(--ms-blue-light);color:var(--ms-blue3);}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* APPROVAL PANEL */
+.split-view{display:grid;grid-template-columns:1fr 360px;gap:16px;}
+.detail-panel{background:var(--white);border:1px solid var(--neutral150);border-radius:2px;padding:0;overflow:hidden;}
+.detail-header{background:var(--neutral50);border-bottom:1px solid var(--neutral150);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.detail-title{font-weight:700;font-size:0.9rem;color:var(--neutral900);}
+.detail-sub{font-size:0.75rem;color:var(--neutral500);margin-top:1px;}
+.detail-body{padding:18px;}
+.field-row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--neutral100);}
+.field-row:last-child{border-bottom:none;}
+.field-label{font-size:0.76rem;color:var(--neutral500);font-weight:600;padding-top:1px;}
+.field-value{font-size:0.83rem;color:var(--neutral900);font-weight:500;}
+.approval-actions{padding:16px 18px;border-top:1px solid var(--neutral150);display:flex;gap:8px;}
+.action-btn{flex:1;padding:8px;border-radius:2px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;font-family:'Inter',sans-serif;}
+.action-approve{background:var(--ms-green);color:#fff;border-color:var(--ms-green);}
+.action-approve:hover{background:#0b6a0b;}
+.action-reject{background:var(--white);color:var(--ms-red);border-color:var(--ms-red);}
+.action-reject:hover{background:var(--ms-red-light);}
+.action-info{background:var(--white);color:var(--neutral600);border-color:var(--neutral200);}
+.action-info:hover{background:var(--neutral100);}
+
+/* AUTOMATE FLOW PANEL */
+.flow-diagram{background:var(--white);border:1px solid var(--neutral150);border-radius:2px;padding:20px;}
+.flow-step{display:flex;align-items:flex-start;gap:14px;position:relative;}
+.flow-step+.flow-step{margin-top:0;}
+.flow-step+.flow-step::before{content:'';position:absolute;left:17px;top:-16px;width:2px;height:16px;background:var(--neutral200);}
+.flow-connector{position:absolute;left:17px;top:36px;width:2px;height:20px;background:var(--neutral200);}
+.step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;border:2px solid;}
+.step-dot.trigger{background:var(--ms-blue-xlight);border-color:var(--ms-blue);color:var(--ms-blue);}
+.step-dot.action{background:var(--ms-purple-light);border-color:var(--ms-purple);color:var(--ms-purple);}
+.step-dot.condition{background:var(--ms-amber-light);border-color:var(--ms-amber);color:var(--ms-amber);}
+.step-dot.done{background:var(--ms-green-light);border-color:var(--ms-green);color:var(--ms-green);}
+.step-dot.active{animation:ring 1.5s ease-in-out infinite;}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 4px transparent}}
+.step-body{flex:1;padding-bottom:20px;}
+.step-name{font-size:0.83rem;font-weight:700;color:var(--neutral900);margin-bottom:2px;}
+.step-desc{font-size:0.75rem;color:var(--neutral500);line-height:1.5;}
+.step-tag{display:inline-block;font-size:0.68rem;font-weight:600;padding:1px 7px;border-radius:2px;margin-top:4px;}
+.step-tag.pa{background:var(--ms-blue-light);color:var(--ms-blue3);}
+.step-tag.pauto{background:var(--ms-purple-light);color:var(--ms-purple);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--neutral900);color:#fff;padding:12px 18px;border-radius:4px;font-size:0.83rem;font-weight:500;display:flex;align-items:center;gap:10px;z-index:999;transform:translateY(80px);opacity:0;transition:all 0.3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:var(--ms-green);}
+.toast.error{background:var(--ms-red);}
+
+/* INVOICE FORM */
+.form-section{background:var(--white);border:1px solid var(--neutral150);border-radius:2px;padding:20px;margin-bottom:16px;}
+.form-section-title{font-weight:700;font-size:0.85rem;color:var(--neutral900);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--neutral100);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.form-field label{font-size:0.75rem;font-weight:600;color:var(--neutral600);}
+.form-field input,.form-field select,.form-field textarea{border:1px solid var(--neutral200);border-radius:2px;padding:7px 10px;font-size:0.82rem;color:var(--neutral900);font-family:'Inter',sans-serif;background:var(--white);transition:border-color 0.15s;outline:none;}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--ms-blue);box-shadow:0 0 0 1px var(--ms-blue);}
+.form-field.full{grid-column:1/-1;}
+
+.page-footer{background:var(--white);border-top:1px solid var(--neutral150);padding:28px 24px;text-align:center;}
+.page-footer a{color:var(--ms-blue);text-decoration:none;font-size:0.85rem;font-weight:600;}
+.page-footer p{color:var(--neutral300);font-size:0.78rem;margin-top:6px;}
+
+@media(max-width:800px){
+  .app-body{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .kpi-strip{grid-template-columns:repeat(2,1fr);}
+  .split-view{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- PORTFOLIO NAV -->
+<div class="portfolio-nav">
+  <div class="pnav-logo"><span class="badge">PA</span>Power Apps · Power Automate · Finance Ops</div>
+  <a href="index.html" class="pnav-back">← Portfolio</a>
+</div>
+
+<!-- APP SHELL -->
+<div class="app-shell">
+
+  <!-- MS APP HEADER -->
+  <div class="app-header">
+    <div class="app-header-left">
+      <div class="app-icon">💼</div>
+      <span class="app-name">Finance Operations Hub</span>
+      <span class="app-env">Production · Kenya Region</span>
+    </div>
+    <div class="app-header-right">
+      <span style="font-size:0.8rem;opacity:0.8;">⚡ Power Automate flows: 3 active</span>
+      <div class="user-avatar">WK</div>
+    </div>
+  </div>
+
+  <!-- APP NAV TABS -->
+  <div class="app-nav">
+    <div class="app-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+    <div class="app-tab" onclick="switchTab('expenses',this)">🧾 Expense Approvals <span class="tab-badge" id="expBadge">4</span></div>
+    <div class="app-tab" onclick="switchTab('invoices',this)">📄 Invoice Processing <span class="tab-badge" id="invBadge">2</span></div>
+    <div class="app-tab" onclick="switchTab('flow',this)">⚡ Automation Flows</div>
+    <div class="app-tab" onclick="switchTab('submit',this)">＋ Submit Request</div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Finance</div>
+        <div class="sidebar-item active" onclick="switchTab('dashboard',null)"><span class="si-icon">📊</span>Dashboard</div>
+        <div class="sidebar-item" onclick="switchTab('expenses',null)"><span class="si-icon">🧾</span>Expense Requests<span class="si-count">4</span></div>
+        <div class="sidebar-item" onclick="switchTab('invoices',null)"><span class="si-icon">📄</span>Invoices<span class="si-count">2</span></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Automation</div>
+        <div class="sidebar-item" onclick="switchTab('flow',null)"><span class="si-icon">⚡</span>Power Automate Flows</div>
+        <div class="sidebar-item" onclick="switchTab('submit',null)"><span class="si-icon">＋</span>New Request</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Reports</div>
+        <div class="sidebar-item"><span class="si-icon">📈</span>Monthly Spend</div>
+        <div class="sidebar-item"><span class="si-icon">📉</span>Budget vs Actual</div>
+      </div>
+    </div>
+
+    <!-- CONTENT PANES -->
+
+    <!-- DASHBOARD -->
+    <div class="content-pane active" id="pane-dashboard">
+      <div class="kpi-strip">
+        <div class="kpi"><div class="kpi-lbl">Pending Approvals</div><div class="kpi-val" id="pendingCount">6</div><div class="kpi-delta down">↑ 2 since yesterday</div></div>
+        <div class="kpi"><div class="kpi-lbl">Approved This Month</div><div class="kpi-val">KES 2.4M</div><div class="kpi-delta up">↑ 18% vs last month</div></div>
+        <div class="kpi"><div class="kpi-lbl">Avg. Approval Time</div><div class="kpi-val">4.2h</div><div class="kpi-delta up">↓ 1.8h vs target</div></div>
+        <div class="kpi"><div class="kpi-lbl">Auto-processed</div><div class="kpi-val">84%</div><div class="kpi-delta up">↑ 12pp via Power Automate</div></div>
+      </div>
+
+      <div class="split-view">
+        <div>
+          <div class="cmd-bar" style="margin-bottom:12px;">
+            <span style="font-size:0.85rem;font-weight:700;color:var(--neutral700);">Recent Activity</span>
+          </div>
+          <div class="grid-wrap">
+            <div class="grid-header-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span>Description</span><span>Amount</span><span>Submitted by</span><span>Status</span>
+            </div>
+            <div class="grid-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span style="font-size:0.82rem;color:var(--neutral700);">Office supplies — Nairobi HQ</span>
+              <span style="font-size:0.82rem;font-weight:600;">KES 24,800</span>
+              <span style="font-size:0.78rem;color:var(--neutral500);">A. Kamau</span>
+              <span class="status st-approved">Approved</span>
+            </div>
+            <div class="grid-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span style="font-size:0.82rem;color:var(--neutral700);">Vendor invoice — IT Services</span>
+              <span style="font-size:0.82rem;font-weight:600;">KES 180,000</span>
+              <span style="font-size:0.78rem;color:var(--neutral500);">F. Omondi</span>
+              <span class="status st-processing">Processing</span>
+            </div>
+            <div class="grid-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span style="font-size:0.82rem;color:var(--neutral700);">Team offsite — Naivasha</span>
+              <span style="font-size:0.82rem;font-weight:600;">KES 95,000</span>
+              <span style="font-size:0.78rem;color:var(--neutral500);">W. Kimani</span>
+              <span class="status st-pending">Pending</span>
+            </div>
+            <div class="grid-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span style="font-size:0.82rem;color:var(--neutral700);">Flight — Mombasa client visit</span>
+              <span style="font-size:0.82rem;font-weight:600;">KES 48,500</span>
+              <span style="font-size:0.78rem;color:var(--neutral500);">J. Mwangi</span>
+              <span class="status st-approved">Approved</span>
+            </div>
+            <div class="grid-row" style="grid-template-columns:1fr 120px 100px 90px;">
+              <span style="font-size:0.82rem;color:var(--neutral700);">Printing & branding materials</span>
+              <span style="font-size:0.82rem;font-weight:600;">KES 62,400</span>
+              <span style="font-size:0.78rem;color:var(--neutral500);">P. Wanjiru</span>
+              <span class="status st-rejected">Rejected</span>
+            </div>
+          </div>
+        </div>
+        <div class="flow-diagram">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--neutral700);margin-bottom:16px;">⚡ Live: Expense Approval Flow</div>
+          <div style="display:flex;flex-direction:column;gap:0;position:relative;">
+            <div class="flow-step">
+              <div class="step-dot trigger done">📨</div>
+              <div class="step-body">
+                <div class="step-name">Form submitted</div>
+                <div class="step-desc">Employee submits via Power Apps</div>
+                <span class="step-tag pa">Power Apps</span>
+              </div>
+              <div class="flow-connector"></div>
+            </div>
+            <div class="flow-step">
+              <div class="step-dot action done">📋</div>
+              <div class="step-body">
+                <div class="step-name">Record created in SharePoint</div>
+                <div class="step-desc">Auto-logged with metadata</div>
+                <span class="step-tag pauto">Power Automate</span>
+              </div>
+              <div class="flow-connector"></div>
+            </div>
+            <div class="flow-step">
+              <div class="step-dot condition active">⑂</div>
+              <div class="step-body">
+                <div class="step-name">Amount threshold check</div>
+                <div class="step-desc">&lt; KES 50K → auto-approve<br>&gt; KES 50K → manager approval</div>
+                <span class="step-tag pauto">Power Automate</span>
+              </div>
+              <div class="flow-connector"></div>
+            </div>
+            <div class="flow-step">
+              <div class="step-dot action">📧</div>
+              <div class="step-body">
+                <div class="step-name">Approval request sent</div>
+                <div class="step-desc">Teams adaptive card to manager</div>
+                <span class="step-tag pauto">Power Automate</span>
+              </div>
+              <div class="flow-connector"></div>
+            </div>
+            <div class="flow-step">
+              <div class="step-dot done">✓</div>
+              <div class="step-body">
+                <div class="step-name">Outcome logged & notified</div>
+                <div class="step-desc">Email to submitter, list updated</div>
+                <span class="step-tag pauto">Power Automate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="content-pane" id="pane-expenses">
+      <div class="cmd-bar">
+        <button class="cmd-btn primary" onclick="approveSelected()">✓ Approve</button>
+        <button class="cmd-btn" onclick="rejectSelected()" style="color:var(--ms-red);border-color:var(--ms-red);">✕ Reject</button>
+        <div class="cmd-separator"></div>
+        <button class="cmd-btn">⬇ Export</button>
+        <div class="search-box"><span style="color:var(--neutral400);font-size:0.85rem;">🔍</span><input type="text" placeholder="Search requests..." oninput="filterExpenses(this.value)"/></div>
+      </div>
+
+      <div class="split-view">
+        <div>
+          <div class="grid-wrap">
+            <div class="grid-header-row" style="grid-template-columns:22px 1fr 120px 90px 100px 90px;">
+              <span></span><span>Request</span><span>Amount</span><span>Category</span><span>Submitted by</span><span>Status</span>
+            </div>
+            <div id="expenseGrid"></div>
+          </div>
+        </div>
+        <div class="detail-panel" id="expDetailPanel">
+          <div class="detail-header">
+            <div>
+              <div class="detail-title" id="expDetailTitle">Select a request</div>
+              <div class="detail-sub" id="expDetailSub">Click any row to review</div>
+            </div>
+          </div>
+          <div class="detail-body" id="expDetailBody">
+            <div style="text-align:center;padding:40px 20px;color:var(--neutral300);font-size:0.85rem;">Select a request from the list to review details</div>
+          </div>
+          <div class="approval-actions" id="expActions" style="display:none;">
+            <button class="action-btn action-approve" onclick="actionOnSelected('approved')">✓ Approve</button>
+            <button class="action-btn action-reject" onclick="actionOnSelected('rejected')">✕ Reject</button>
+            <button class="action-btn action-info" onclick="actionOnSelected('processing')">⟳ More Info</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="content-pane" id="pane-invoices">
+      <div class="cmd-bar">
+        <button class="cmd-btn primary">＋ Upload Invoice</button>
+        <button class="cmd-btn">⚡ Run OCR Extraction</button>
+        <div class="cmd-separator"></div>
+        <button class="cmd-btn">⬇ Export to Finance</button>
+      </div>
+      <div class="grid-wrap">
+        <div class="grid-header-row" style="grid-template-columns:1fr 120px 100px 120px 90px 100px;">
+          <span>Invoice</span><span>Vendor</span><span>Amount</span><span>Due Date</span><span>Status</span><span>Action</span>
+        </div>
+        <div id="invoiceGrid"></div>
+      </div>
+    </div>
+
+    <!-- AUTOMATION FLOWS -->
+    <div class="content-pane" id="pane-flow">
+      <div class="cmd-bar">
+        <span style="font-size:0.85rem;font-weight:700;color:var(--neutral700);">Power Automate Flows — Finance Ops</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="flow-diagram">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--neutral900);">⚡ Expense Approval Workflow</div>
+              <div style="font-size:0.75rem;color:var(--neutral500);margin-top:2px;">Triggered on form submit · Teams + Email notifications</div>
+            </div>
+            <span class="status st-approved">Active</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="background:var(--ms-blue-xlight);border:1px solid var(--ms-blue-light);border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-blue3);font-weight:600;">📨 PowerApps trigger</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">📋 Create SP record</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-amber-light);border:1px solid #ffe69c;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:#7a4f00;font-weight:600;">⑂ Amount condition</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">📧 Teams approval</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-green-light);border:1px solid #b3e0b3;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-green);font-weight:600;">✓ Notify & update</div>
+          </div>
+          <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Runs this month</div><div style="font-weight:700;color:var(--neutral900);">284</div></div>
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Success rate</div><div style="font-weight:700;color:var(--ms-green);">99.3%</div></div>
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Avg. run time</div><div style="font-weight:700;color:var(--neutral900);">2.4s</div></div>
+          </div>
+        </div>
+
+        <div class="flow-diagram">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--neutral900);">⚡ Invoice OCR & Routing</div>
+              <div style="font-size:0.75rem;color:var(--neutral500);margin-top:2px;">Triggered on email attachment · AI Builder OCR extraction</div>
+            </div>
+            <span class="status st-approved">Active</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="background:var(--ms-blue-xlight);border:1px solid var(--ms-blue-light);border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-blue3);font-weight:600;">📧 Email trigger</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">🤖 AI Builder OCR</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-amber-light);border:1px solid #ffe69c;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:#7a4f00;font-weight:600;">⑂ Vendor match</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">📋 Create D365 record</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-green-light);border:1px solid #b3e0b3;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-green);font-weight:600;">✓ Route for payment</div>
+          </div>
+          <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Invoices processed</div><div style="font-weight:700;color:var(--neutral900);">142</div></div>
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Auto-matched rate</div><div style="font-weight:700;color:var(--ms-green);">91%</div></div>
+            <div style="background:var(--neutral50);border-radius:2px;padding:10px;font-size:0.75rem;"><div style="color:var(--neutral500);margin-bottom:3px;">Manual review needed</div><div style="font-weight:700;color:var(--ms-amber);">9%</div></div>
+          </div>
+        </div>
+
+        <div class="flow-diagram">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--neutral900);">⚡ Monthly Budget Reconciliation</div>
+              <div style="font-size:0.75rem;color:var(--neutral500);margin-top:2px;">Scheduled · 1st of month · Excel + SharePoint sync</div>
+            </div>
+            <span class="status st-approved">Active</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="background:var(--ms-blue-xlight);border:1px solid var(--ms-blue-light);border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-blue3);font-weight:600;">🕐 Scheduled trigger</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">📊 Pull Excel data</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-purple-light);border:1px solid #d7cce9;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-purple);font-weight:600;">🔄 Reconcile vs SP</div>
+            <div style="color:var(--neutral300);display:flex;align-items:center;">→</div>
+            <div style="background:var(--ms-green-light);border:1px solid #b3e0b3;border-radius:4px;padding:8px 14px;font-size:0.78rem;color:var(--ms-green);font-weight:600;">📧 Send CFO report</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT REQUEST -->
+    <div class="content-pane" id="pane-submit">
+      <div class="cmd-bar">
+        <span style="font-size:0.85rem;font-weight:700;color:var(--neutral700);">New Expense / Purchase Request</span>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Request Details</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Request Type</label>
+            <select id="reqType">
+              <option>Expense Reimbursement</option>
+              <option>Purchase Order</option>
+              <option>Vendor Invoice</option>
+              <option>Travel Advance</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Category</label>
+            <select>
+              <option>Travel & Transport</option>
+              <option>Office Supplies</option>
+              <option>IT & Software</option>
+              <option>Marketing & Events</option>
+              <option>Training & Development</option>
+              <option>Utilities</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label>Description</label>
+            <input type="text" placeholder="Brief description of the expense or purchase" id="reqDesc"/>
+          </div>
+          <div class="form-field">
+            <label>Amount (KES)</label>
+            <input type="number" placeholder="0.00" id="reqAmount"/>
+          </div>
+          <div class="form-field">
+            <label>Date of Expense</label>
+            <input type="date" id="reqDate"/>
+          </div>
+          <div class="form-field">
+            <label>Submitted by</label>
+            <input type="text" placeholder="Your name" id="reqName"/>
+          </div>
+          <div class="form-field">
+            <label>Department</label>
+            <select>
+              <option>Finance</option>
+              <option>Technology</option>
+              <option>Operations</option>
+              <option>Sales & Marketing</option>
+              <option>HR</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label>Business Justification</label>
+            <textarea rows="3" placeholder="Explain why this expense is necessary..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="cmd-bar">
+        <button class="cmd-btn primary" onclick="submitRequest()">⚡ Submit & Trigger Flow</button>
+        <button class="cmd-btn">💾 Save Draft</button>
+      </div>
+      <div id="submitFeedback" style="display:none;margin-top:16px;background:var(--ms-green-light);border:1px solid #b3e0b3;border-radius:2px;padding:14px 18px;font-size:0.83rem;color:var(--ms-green);font-weight:500;"></div>
+    </div>
+
+  </div><!-- /app-body -->
+</div><!-- /app-shell -->
+
+<div class="page-footer">
+  <a href="index.html">← Back to Portfolio</a>
+  <p>Wairimu Kimani · Data Scientist & ML Engineer · Nairobi, Kenya</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+const EXPENSES = [
+  {id:'EXP-2024-041',desc:'Team offsite — Naivasha retreat',amount:'KES 95,000',cat:'Events',by:'W. Kimani',dept:'Technology',date:'12 Jul 2026',status:'pending',notes:'2-day team building event, 12 staff. Includes accommodation and meals.'},
+  {id:'EXP-2024-042',desc:'Mombasa client visit — flights & hotel',amount:'KES 48,500',cat:'Travel',by:'J. Mwangi',dept:'Sales',date:'11 Jul 2026',status:'pending',notes:'Quarterly review with key client in Mombasa. Return flights + 1 night hotel.'},
+  {id:'EXP-2024-043',desc:'Power BI Pro licences — 5 seats',amount:'KES 38,200',cat:'IT & Software',by:'A. Kamau',dept:'Finance',date:'10 Jul 2026',status:'pending',notes:'Annual renewal for Finance team analytics licences.'},
+  {id:'EXP-2024-044',desc:'Office printer cartridges & stationery',amount:'KES 12,400',cat:'Supplies',by:'P. Wanjiru',dept:'Operations',date:'9 Jul 2026',status:'pending',notes:'Monthly office supplies restock.'},
+];
+
+const INVOICES = [
+  {id:'INV-2024-088',vendor:'Safaricom PLC',desc:'Monthly data & voice bundle',amount:'KES 84,000',due:'20 Jul 2026',status:'processing',extracted:true},
+  {id:'INV-2024-089',vendor:'Kenya Power',desc:'Electricity bill — Nairobi office',amount:'KES 42,500',due:'25 Jul 2026',status:'pending',extracted:false},
+  {id:'INV-2024-090',vendor:'Prism Solutions Ltd',desc:'IT support services — Q2',amount:'KES 320,000',due:'31 Jul 2026',status:'pending',extracted:false},
+];
+
+let selectedExpId = null;
+
+// ── TAB SWITCHING ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  if (el) el.classList.add('active');
+  if (tab === 'expenses') renderExpenses();
+  if (tab === 'invoices') renderInvoices();
+}
+
+// ── EXPENSES ──
+function renderExpenses(filter='') {
+  const grid = document.getElementById('expenseGrid');
+  const filtered = EXPENSES.filter(e => !filter || e.desc.toLowerCase().includes(filter.toLowerCase()) || e.by.toLowerCase().includes(filter.toLowerCase()));
+  grid.innerHTML = filtered.map(e => `
+    <div class="grid-row ${selectedExpId===e.id?'selected':''}" style="grid-template-columns:22px 1fr 120px 90px 100px 90px;" onclick="selectExpense('${e.id}')">
+      <input type="checkbox" style="margin:0;" onclick="event.stopPropagation()"/>
+      <span style="font-size:0.82rem;color:var(--neutral700);">${e.desc}</span>
+      <span style="font-size:0.82rem;font-weight:600;">${e.amount}</span>
+      <span style="font-size:0.75rem;color:var(--neutral500);">${e.cat}</span>
+      <span style="font-size:0.78rem;color:var(--neutral500);">${e.by}</span>
+      <span class="status st-${e.status}">${e.status.charAt(0).toUpperCase()+e.status.slice(1)}</span>
+    </div>`).join('') || `<div style="padding:32px;text-align:center;color:var(--neutral300);font-size:0.85rem;">No results</div>`;
+}
+
+function selectExpense(id) {
+  selectedExpId = id;
+  const e = EXPENSES.find(x => x.id===id);
+  document.getElementById('expDetailTitle').textContent = e.id;
+  document.getElementById('expDetailSub').textContent = e.desc;
+  document.getElementById('expDetailBody').innerHTML = `
+    <div class="field-row"><span class="field-label">Amount</span><span class="field-value" style="font-weight:700;color:var(--neutral900);">${e.amount}</span></div>
+    <div class="field-row"><span class="field-label">Category</span><span class="field-value">${e.cat}</span></div>
+    <div class="field-row"><span class="field-label">Submitted by</span><span class="field-value">${e.by}</span></div>
+    <div class="field-row"><span class="field-label">Department</span><span class="field-value">${e.dept}</span></div>
+    <div class="field-row"><span class="field-label">Date</span><span class="field-value">${e.date}</span></div>
+    <div class="field-row"><span class="field-label">Status</span><span class="field-value"><span class="status st-${e.status}">${e.status}</span></span></div>
+    <div class="field-row" style="border-bottom:none;"><span class="field-label">Notes</span><span class="field-value" style="font-size:0.8rem;color:var(--neutral600);">${e.notes}</span></div>`;
+  document.getElementById('expActions').style.display = e.status==='pending' ? 'flex' : 'none';
+  renderExpenses();
+}
+
+function actionOnSelected(newStatus) {
+  if (!selectedExpId) return;
+  const e = EXPENSES.find(x => x.id===selectedExpId);
+  e.status = newStatus;
+  const msgs = {approved:'✓ Approved — Power Automate notifying submitter',rejected:'✕ Rejected — submitter will be notified',processing:'⟳ Sent back for more information'};
+  showToast(msgs[newStatus], newStatus==='approved'?'success':newStatus==='rejected'?'error':'');
+  updateBadge();
+  renderExpenses();
+  selectExpense(selectedExpId);
+}
+
+function approveSelected() { if(selectedExpId) actionOnSelected('approved'); }
+function rejectSelected() { if(selectedExpId) actionOnSelected('rejected'); }
+function filterExpenses(v) { renderExpenses(v); }
+
+function updateBadge() {
+  const pending = EXPENSES.filter(e=>e.status==='pending').length;
+  document.getElementById('expBadge').textContent = pending;
+  document.getElementById('pendingCount').textContent = pending + INVOICES.filter(i=>i.status==='pending').length;
+}
+
+// ── INVOICES ──
+function renderInvoices() {
+  document.getElementById('invoiceGrid').innerHTML = INVOICES.map(inv => `
+    <div class="grid-row" style="grid-template-columns:1fr 120px 100px 120px 90px 100px;">
+      <span style="font-size:0.82rem;color:var(--neutral700);">${inv.id} — ${inv.desc}</span>
+      <span style="font-size:0.78rem;font-weight:600;color:var(--neutral700);">${inv.vendor}</span>
+      <span style="font-size:0.82rem;font-weight:700;">${inv.amount}</span>
+      <span style="font-size:0.78rem;color:var(--neutral500);">${inv.due}</span>
+      <span class="status st-${inv.status}">${inv.status}</span>
+      <button onclick="processInvoice('${inv.id}')" style="background:var(--ms-blue);color:#fff;border:none;border-radius:2px;padding:5px 10px;font-size:0.74rem;font-weight:600;cursor:pointer;">
+        ${inv.extracted ? '✓ Route' : '🤖 Extract'}
+      </button>
+    </div>`).join('');
+}
+
+function processInvoice(id) {
+  const inv = INVOICES.find(x=>x.id===id);
+  if (!inv.extracted) {
+    inv.extracted = true;
+    inv.status = 'processing';
+    showToast('🤖 AI Builder OCR running — data extracted in 2.4s', 'success');
+  } else {
+    inv.status = 'approved';
+    showToast('✓ Invoice routed for payment approval', 'success');
+  }
+  updateBadge();
+  renderInvoices();
+}
+
+// ── SUBMIT ──
+function submitRequest() {
+  const desc = document.getElementById('reqDesc').value;
+  const amount = document.getElementById('reqAmount').value;
+  const name = document.getElementById('reqName').value;
+  if (!desc || !amount || !name) {
+    showToast('Please fill in all required fields', 'error'); return;
+  }
+  const newExp = {
+    id:'EXP-2024-0'+( 45+EXPENSES.length),
+    desc, amount:'KES '+parseInt(amount).toLocaleString(),
+    cat:document.getElementById('reqType').value,
+    by:name, dept:'Submitted',
+    date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    status: parseInt(amount) < 50000 ? 'approved' : 'pending',
+    notes:'Submitted via Power Apps form.'
+  };
+  EXPENSES.unshift(newExp);
+  updateBadge();
+  const fb = document.getElementById('submitFeedback');
+  fb.style.display = 'block';
+  fb.innerHTML = `⚡ <strong>Flow triggered successfully.</strong> Request <strong>${newExp.id}</strong> created. ${parseInt(amount)<50000 ? 'Amount is under KES 50,000 — auto-approved.' : 'Sent to manager for approval via Teams.'} Submitter will be notified by email.`;
+  showToast('⚡ Power Automate flow triggered', 'success');
+  document.getElementById('reqDesc').value='';
+  document.getElementById('reqAmount').value='';
+  document.getElementById('reqName').value='';
+}
+
+// ── TOAST ──
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type?' '+type:'');
+  setTimeout(()=> t.classList.remove('show'), 3200);
+}
+
+// Init
+renderExpenses();
+renderInvoices();
+</script>
+</body>
+</html>
