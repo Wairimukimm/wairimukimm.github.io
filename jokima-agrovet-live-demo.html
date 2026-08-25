@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jokima Agrovet — Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#0E5E33; --green-dark:#0A3F22; --green-light:#E4F3E9;
+    --red:#C0212B; --red-light:#FBE6E7;
+    --paper:#F6F7F4; --card:#FFFFFF; --ink:#152016; --muted:#657268; --line:#E4E7E1;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);font-family:'Inter',sans-serif;color:var(--ink);}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 0 60px;}
+
+  .topbar{background:var(--green-dark);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:32px;height:32px;border-radius:6px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:#fff;}
+  .brand-text{font-family:'Poppins',sans-serif;font-weight:600;font-size:15px;}
+  .brand-sub{font-size:11px;color:#BFE0CC;margin-top:1px;}
+  .reseller-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);padding:6px 12px;border-radius:20px;font-size:12px;}
+  .reseller-dot{width:8px;height:8px;border-radius:50%;background:var(--red);}
+
+  .case{padding:32px 28px 8px;}
+  .case-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:18px;}
+  .case-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .case-card .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;}
+  .case-card.problem .eyebrow{color:var(--red);}
+  .case-card.solution .eyebrow{color:var(--green);}
+  .case-card.impact .eyebrow{color:var(--muted);}
+  .case-card p.body{font-size:13.5px;line-height:1.6;margin:0;color:#3B453D;}
+  .case h1{font-family:'Poppins',sans-serif;font-size:23px;margin:0 0 6px;}
+  .case > p{margin:0;color:var(--muted);font-size:13.5px;max-width:64ch;}
+  .impact-list{margin:0;padding-left:16px;font-size:13.5px;line-height:1.7;color:#3B453D;}
+
+  .demo-label{display:flex;align-items:center;gap:8px;padding:32px 28px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green-dark);}
+  .demo-label .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .filter-row{display:flex;gap:8px;padding:0 28px 16px;flex-wrap:wrap;}
+  .filter-btn{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;transition:.15s;}
+  .filter-btn:hover{border-color:var(--green);}
+  .filter-btn.active{background:var(--green-dark);border-color:var(--green-dark);color:#fff;}
+
+  .header-row{display:flex;justify-content:space-between;align-items:flex-end;padding:4px 28px 4px;flex-wrap:wrap;gap:12px;}
+  .header-row h2{font-family:'Poppins',sans-serif;font-size:19px;margin:0 0 4px;}
+  .header-row p{margin:0;color:var(--muted);font-size:13px;}
+  .period-pill{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green-dark);background:var(--green-light);border:1px solid #CFE7D9;padding:6px 12px;border-radius:6px;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 28px 0;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;transition:.2s;}
+  .kpi-label{font-size:12px;color:var(--muted);margin:0 0 8px;}
+  .kpi-value{font-family:'Poppins',sans-serif;font-size:22px;font-weight:600;margin:0 0 6px;}
+  .kpi-delta{font-size:12px;font-family:'IBM Plex Mono',monospace;display:inline-flex;align-items:center;gap:4px;}
+  .up{color:var(--green);} .down{color:var(--red);}
+
+  .panels{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;padding:18px 28px 0;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+  .panel h3{font-family:'Poppins',sans-serif;font-size:14px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;}
+  .panel h3 span{font-size:11px;color:var(--muted);font-weight:400;font-family:'Inter',sans-serif;}
+
+  .shop-row{margin-bottom:14px;} .shop-row:last-child{margin-bottom:0;}
+  .shop-row-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+  .shop-row-top b{font-weight:600;} .shop-row-top .figs{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:12px;}
+  .bar-track{height:10px;background:#EEF1EC;border-radius:5px;overflow:hidden;display:flex;}
+  .bar-sales{background:var(--green);height:100%;transition:width .3s;}
+  .bar-purchases{background:var(--red);height:100%;opacity:.55;transition:width .3s;}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:11px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .sw{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .shop-row.dim{opacity:.3;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-size:11px;color:var(--muted);font-weight:500;padding:0 0 8px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.03em;}
+  td{padding:10px 0;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .prod-name{font-weight:500;}
+  .prod-tag{font-size:10px;color:var(--red);background:var(--red-light);padding:2px 6px;border-radius:4px;margin-left:6px;font-family:'IBM Plex Mono',monospace;}
+  .qty{color:var(--muted);} .rev{font-family:'IBM Plex Mono',monospace;text-align:right;}
+
+  .alert-list{display:grid;gap:10px;}
+  .alert-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:10px 12px;border-radius:8px;background:var(--red-light);border:1px solid #F3C8CB;}
+  .alert-item .lvl{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red);}
+  .alert-item.ok{background:var(--green-light);border-color:#CFE7D9;}
+  .alert-item.ok .lvl{color:var(--green);}
+
+  .footnote{padding:24px 28px 0;font-size:12px;color:var(--muted);}
+
+  @media (max-width:760px){
+    .case-grid{grid-template-columns:1fr;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .panels{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">JA</div>
+      <div><div class="brand-text">Jokima Agrovet</div><div class="brand-sub">Consolidated business dashboard</div></div>
+    </div>
+    <div class="reseller-badge"><span class="reseller-dot"></span> Authorised Farmer's Choice reseller</div>
+  </div>
+
+  <div class="case">
+    <h1>Case study: one dashboard for three shops</h1>
+    <p>Jokima Agrovet runs three branches, each keeping its own paper and spreadsheet records. Here's the problem, what was built, and a live version of the result below.</p>
+
+    <div class="case-grid">
+      <div class="case-card problem">
+        <p class="eyebrow">The problem</p>
+        <p class="body">Sales and purchases lived in separate books per branch. The owner had no single view of how the business was doing, comparing branches meant manually collecting three sets of numbers.</p>
+      </div>
+      <div class="case-card solution">
+        <p class="eyebrow">The solution</p>
+        <p class="body">Built a centralised dashboard that consolidates sales, purchases, and stock across all three branches into one live reporting layer, with Farmer's Choice products tracked separately as a reseller line.</p>
+      </div>
+      <div class="case-card impact">
+        <p class="eyebrow">The result</p>
+        <ul class="impact-list">
+          <li>One screen instead of three ledgers</li>
+          <li>Branch comparison in seconds, not days</li>
+          <li>Low-stock issues caught before they cost a sale</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-label"><span class="dot"></span> Live demo — filter by branch, figures update below</div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" data-branch="all">All branches</button>
+    <button class="filter-btn" data-branch="a">Branch A — Nakuru Rd</button>
+    <button class="filter-btn" data-branch="b">Branch B — Kikuyu</button>
+    <button class="filter-btn" data-branch="c">Branch C — Naivasha</button>
+  </div>
+
+  <div class="header-row">
+    <div><h2 id="hdr-title">Business overview — all branches</h2><p>Dummy data, for demo purposes.</p></div>
+    <div class="period-pill">Jan 2026</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><p class="kpi-label">Total sales</p><p class="kpi-value" id="kpi-sales">KSh 4.82M</p><span class="kpi-delta up" id="kpi-sales-d">&#8593; 12.4% vs last month</span></div>
+    <div class="kpi"><p class="kpi-label">Total purchases</p><p class="kpi-value" id="kpi-purch">KSh 3.15M</p><span class="kpi-delta down" id="kpi-purch-d">&#8593; 6.1% cost increase</span></div>
+    <div class="kpi"><p class="kpi-label">Gross margin</p><p class="kpi-value" id="kpi-margin">34.6%</p><span class="kpi-delta up" id="kpi-margin-d">&#8593; 2.1 pts</span></div>
+    <div class="kpi"><p class="kpi-label">Farmer's Choice share</p><p class="kpi-value" id="kpi-fc">41%</p><span class="kpi-delta up">of branch revenue</span></div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h3>Sales trend, last 6 months <span>KSh</span></h3>
+      <svg viewBox="0 0 560 130" preserveAspectRatio="none" style="width:100%;height:130px;">
+        <polyline id="trend-sales" points="0,90 90,78 180,82 270,60 360,48 450,30 560,20" fill="none" stroke="#0E5E33" stroke-width="3"/>
+        <polyline id="trend-purch" points="0,110 90,105 180,108 270,96 360,100 450,88 560,86" fill="none" stroke="#C0212B" stroke-width="2.5" stroke-dasharray="4 3" opacity="0.6"/>
+      </svg>
+      <div class="legend"><span><i class="sw" style="background:#0E5E33"></i>Sales</span><span><i class="sw" style="background:#C0212B"></i>Purchases</span></div>
+    </div>
+
+    <div class="panel">
+      <h3>Branch performance <span>sales vs purchases</span></h3>
+      <div class="shop-row" data-branch="a">
+        <div class="shop-row-top"><b>Branch A — Nakuru Rd</b><span class="figs">KSh 1.92M / 1.20M</span></div>
+        <div class="bar-track"><div class="bar-sales" style="width:70%"></div><div class="bar-purchases" style="width:44%"></div></div>
+      </div>
+      <div class="shop-row" data-branch="b">
+        <div class="shop-row-top"><b>Branch B — Kikuyu</b><span class="figs">KSh 1.30M / 0.95M</span></div>
+        <div class="bar-track"><div class="bar-sales" style="width:55%"></div><div class="bar-purchases" style="width:36%"></div></div>
+      </div>
+      <div class="shop-row" data-branch="c">
+        <div class="shop-row-top"><b>Branch C — Naivasha</b><span class="figs">KSh 1.60M / 1.00M</span></div>
+        <div class="bar-track"><div class="bar-sales" style="width:63%"></div><div class="bar-purchases" style="width:38%"></div></div>
+      </div>
+      <div class="legend"><span><i class="sw" style="background:#0E5E33"></i>Sales</span><span><i class="sw" style="background:#C0212B;opacity:.55"></i>Purchases</span></div>
+    </div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h3>Top selling products <span id="prod-scope">this month · all branches</span></h3>
+      <table id="prod-table">
+        <thead><tr><th>Product</th><th>Units</th><th style="text-align:right;">Revenue</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Stock alerts <span id="alert-scope">across branches</span></h3>
+      <div class="alert-list" id="alert-list"></div>
+    </div>
+  </div>
+
+  <p class="footnote">All figures on this page are dummy data for demonstration. The live client build connects to real branch records.</p>
+</div>
+
+<script>
+  const data = {
+    all: {
+      title: "Business overview — all branches",
+      sales: "KSh 4.82M", purch: "KSh 3.15M", margin: "34.6%",
+      salesDelta: "&#8593; 12.4% vs last month", purchDelta: "&#8593; 6.1% cost increase",
+      marginDelta: "&#8593; 2.1 pts", fc: "41%",
+      trendSales: "0,90 90,78 180,82 270,60 360,48 450,30 560,20",
+      trendPurch: "0,110 90,105 180,108 270,96 360,100 450,88 560,86",
+      products: [
+        ["Pig Starter Meal 50kg","fc","1,240","KSh 620,000"],
+        ["Sow & Weaner 10pc","fc","980","KSh 294,000"],
+        ["Layers mash 70kg","","410","KSh 861,000"],
+        ["Pig Grower 25 kg","fc","560","KSh 168,000"],
+        ["Dairy Feeds 50kg","","305","KSh 457,500"]
+      ],
+      alerts: [
+        ["Sow & Weaner — Branch B","low · 12 units",false],
+        ["Layers mash 70kg — Branch C","low · 8 bags",false],
+        ["Pig Grower — all branches","healthy",true],
+        ["Dairy Feeds 50kg — Branch A","healthy",true]
+      ],
+      scope: "all branches"
+    },
+    a: {
+      title: "Business overview — Branch A, Nakuru Rd",
+      sales: "KSh 1.92M", purch: "KSh 1.20M", margin: "37.5%",
+      salesDelta: "&#8593; 15.0% vs last month", purchDelta: "&#8593; 4.8% cost increase",
+      marginDelta: "&#8593; 3.0 pts", fc: "46%",
+      trendSales: "0,95 90,80 180,84 270,55 360,40 450,22 560,14",
+      trendPurch: "0,115 90,108 180,110 270,98 360,102 450,90 560,88",
+      products: [
+        ["Pig Starter Meal 50kg","fc","610","KSh 305,000"],
+        ["Sow & Weaner 10pc","fc","520","KSh 156,000"],
+        ["Layers mash 70kg","","180","KSh 378,000"],
+        ["Pig Grower 25 kg","fc","240","KSh 72,000"]
+      ],
+      alerts: [
+        ["Dairy Feeds 50kg — Branch A","healthy",true],
+        ["Pig Starter Meal — Branch A","healthy",true]
+      ],
+      scope: "Branch A"
+    },
+    b: {
+      title: "Business overview — Branch B, Kikuyu",
+      sales: "KSh 1.30M", purch: "KSh 0.95M", margin: "26.9%",
+      salesDelta: "&#8595; 2.1% vs last month", purchDelta: "&#8593; 8.4% cost increase",
+      marginDelta: "&#8595; 1.4 pts", fc: "33%",
+      trendSales: "0,100 90,98 180,95 270,90 360,85 450,80 560,78",
+      trendPurch: "0,108 90,104 180,100 270,95 360,92 450,88 560,84",
+      products: [
+        ["Sow & Weaner 40pc","fc","280","KSh 84,000"],
+        ["Chicken Mash 1kg","fc","310","KSh 155,000"],
+        ["Layers mash 70kg","","120","KSh 252,000"]
+      ],
+      alerts: [
+        ["Sow & Weaner — Branch B","low · 12 units",false]
+      ],
+      scope: "Branch B"
+    },
+    c: {
+      title: "Business overview — Branch C, Naivasha",
+      sales: "KSh 1.60M", purch: "KSh 1.00M", margin: "37.5%",
+      salesDelta: "&#8593; 9.2% vs last month", purchDelta: "&#8593; 5.5% cost increase",
+      marginDelta: "&#8593; 2.8 pts", fc: "42%",
+      trendSales: "0,88 90,75 180,70 270,58 360,45 450,32 560,25",
+      trendPurch: "0,112 90,106 180,109 270,100 360,98 450,90 560,88",
+      products: [
+        ["Sow & Weaner 50kg","fc","320","KSh 160,000"],
+        ["Pig Grower","fc","180","KSh 54,000"],
+        ["Layers mash 70kg","","110","KSh 231,000"],
+        ["Dairy mash 50kg","","145","KSh 217,500"]
+      ],
+      alerts: [
+        ["Layers mash 70kg — Branch C","low · 8 bags",false]
+      ],
+      scope: "Branch C"
+    }
+  };
+
+  function render(branch){
+    const d = data[branch];
+    document.getElementById('hdr-title').textContent = d.title;
+    document.getElementById('kpi-sales').textContent = d.sales;
+    document.getElementById('kpi-purch').textContent = d.purch;
+    document.getElementById('kpi-margin').textContent = d.margin;
+    document.getElementById('kpi-fc').textContent = d.fc;
+    document.getElementById('kpi-sales-d').innerHTML = d.salesDelta;
+    document.getElementById('kpi-purch-d').innerHTML = d.purchDelta;
+    document.getElementById('kpi-margin-d').innerHTML = d.marginDelta;
+    document.getElementById('trend-sales').setAttribute('points', d.trendSales);
+    document.getElementById('trend-purch').setAttribute('points', d.trendPurch);
+    document.getElementById('prod-scope').textContent = "this month · " + d.scope;
+    document.getElementById('alert-scope').textContent = d.scope;
+
+    document.querySelectorAll('.shop-row').forEach(row=>{
+      row.classList.toggle('dim', branch !== 'all' && row.dataset.branch !== branch);
+    });
+
+    const tbody = document.querySelector('#prod-table tbody');
+    tbody.innerHTML = '';
+    d.products.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="prod-name">' + p[0] + (p[1]==='fc' ? '<span class="prod-tag">Farmer\'s Choice</span>' : '') + '</td><td class="qty">' + p[2] + '</td><td class="rev">' + p[3] + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    const alertList = document.getElementById('alert-list');
+    alertList.innerHTML = '';
+    d.alerts.forEach(a=>{
+      const div = document.createElement('div');
+      div.className = 'alert-item' + (a[2] ? ' ok' : '');
+      div.innerHTML = '<span>' + a[0] + '</span><span class="lvl">' + a[1] + '</span>';
+      alertList.appendChild(div);
+    });
+  }
+
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      render(btn.dataset.branch);
+    });
+  });
+
+  render('all');
+</script>
+</body>
+</html>
